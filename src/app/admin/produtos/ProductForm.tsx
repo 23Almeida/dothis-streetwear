@@ -6,6 +6,7 @@ import { useSupabase } from "@/hooks/useSupabase";
 import { slugify } from "@/lib/utils";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import ImageUploader from "./ImageUploader";
 
 interface Category {
   id: string;
@@ -33,8 +34,9 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
     stock: product?.stock || 0,
     is_active: product?.is_active ?? true,
     tags: product?.tags?.join(", ") || "",
-    images: product?.images?.join("\n") || "",
   });
+
+  const [images, setImages] = useState<string[]>(product?.images || []);
 
   const handleChange = (field: string, value: any) => {
     setForm((prev) => {
@@ -61,7 +63,7 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
       stock: parseInt(String(form.stock)),
       is_active: form.is_active,
       tags: form.tags.split(",").map((t: string) => t.trim()).filter(Boolean),
-      images: form.images.split("\n").map((i: string) => i.trim()).filter(Boolean),
+      images,
     };
 
     const db = supabase as any;
@@ -171,21 +173,7 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
       />
 
       {/* Imagens */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-neutral-400 uppercase tracking-widest">
-          URLs das Imagens (uma por linha)
-        </label>
-        <textarea
-          value={form.images}
-          onChange={(e) => handleChange("images", e.target.value)}
-          placeholder={"https://exemplo.com/foto1.jpg\nhttps://exemplo.com/foto2.jpg"}
-          rows={4}
-          className="w-full bg-neutral-900 border border-neutral-700 text-white placeholder:text-neutral-600 px-4 py-3 text-sm focus:outline-none focus:border-white resize-none font-mono text-xs"
-        />
-        <p className="text-xs text-neutral-600">
-          Cole URLs diretas das imagens. Você pode usar o Supabase Storage para fazer upload.
-        </p>
-      </div>
+      <ImageUploader images={images} onChange={setImages} />
 
       {/* Status */}
       <div className="flex items-center gap-3">
