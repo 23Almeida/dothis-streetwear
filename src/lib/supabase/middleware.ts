@@ -30,16 +30,27 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const pathname = request.nextUrl.pathname;
+
+  // Redirect logged-in users away from login/register pages
+  const authRoutes = ["/login", "/register"];
+  if (user && authRoutes.includes(pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/account";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
   // Protect account and admin routes
   const protectedRoutes = ["/account", "/checkout", "/admin"];
   const isProtected = protectedRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route)
+    pathname.startsWith(route)
   );
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("redirect", request.nextUrl.pathname);
+    url.searchParams.set("redirect", pathname);
     return NextResponse.redirect(url);
   }
 
