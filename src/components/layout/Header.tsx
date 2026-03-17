@@ -87,6 +87,15 @@ export default function Header() {
                 <Search size={20} />
               </Link>
 
+              {profile?.role === "admin" && (
+                <Link
+                  href="/admin"
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1 text-[10px] font-black tracking-widest uppercase bg-white text-black hover:bg-neutral-200 transition-colors"
+                >
+                  Admin
+                </Link>
+              )}
+
               {profile ? (
                 <div className="relative group">
                   <button className="p-2 text-neutral-400 hover:text-white transition-colors">
@@ -174,6 +183,11 @@ export default function Header() {
                 <Link href="/account" className="text-lg text-neutral-400 hover:text-white">
                   Minha Conta
                 </Link>
+                {profile.role === "admin" && (
+                  <Link href="/admin" className="text-lg text-white font-bold">
+                    ⚙ Admin
+                  </Link>
+                )}
                 <button onClick={signOut} className="text-left text-lg text-neutral-400 hover:text-white">
                   Sair
                 </button>
