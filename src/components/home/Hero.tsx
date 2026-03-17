@@ -18,7 +18,7 @@ export default function Hero() {
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
         <p className="text-xs font-bold tracking-[0.5em] uppercase text-neutral-400 mb-10">
-          Nova Coleção — Drop 2024
+          Nova Coleção — Drop 2026
         </p>
 
         {/* Logo 3D girando */}
