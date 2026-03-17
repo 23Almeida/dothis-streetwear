@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Button from "@/components/ui/Button";
+import Logo3D from "./Logo3D";
 
 export default function Hero() {
   return (
@@ -16,12 +17,15 @@ export default function Hero() {
 
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
-        <p className="text-xs font-bold tracking-[0.5em] uppercase text-neutral-400 mb-6">
+        <p className="text-xs font-bold tracking-[0.5em] uppercase text-neutral-400 mb-10">
           Nova Coleção — Drop 2024
         </p>
-        <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-[10rem] font-black tracking-tighter leading-none text-white mb-8">
-          DOTHIS
-        </h1>
+
+        {/* Logo 3D girando */}
+        <div className="mb-10">
+          <Logo3D />
+        </div>
+
         <p className="text-base sm:text-lg text-neutral-300 max-w-md mx-auto mb-10 leading-relaxed">
           Streetwear nacional com identidade própria. Cada peça é uma declaração.
         </p>
