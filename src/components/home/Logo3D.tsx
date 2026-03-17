@@ -5,13 +5,7 @@ import Image from "next/image";
 export default function Logo3D() {
   return (
     <div className="flex items-center justify-center" style={{ perspective: "800px" }}>
-      <div
-        style={{
-          animation: "spin3d 4s linear infinite",
-          transformStyle: "preserve-3d",
-          display: "inline-block",
-        }}
-      >
+      <div className="logo-spin">
         <Image
           src="/Logo.png"
           alt="DOTHIS"
@@ -21,13 +15,6 @@ export default function Logo3D() {
           priority
         />
       </div>
-
-      <style jsx global>{`
-        @keyframes spin3d {
-          0%   { transform: rotateY(0deg); }
-          100% { transform: rotateY(360deg); }
-        }
-      `}</style>
     </div>
   );
 }

@@ -53,3 +53,15 @@ body {
   background: #ffffff;
   color: #000000;
 }
+
+/* Logo 3D spin */
+@keyframes spin3d {
+  from { transform: rotateY(0deg); }
+  to   { transform: rotateY(360deg); }
+}
+
+.logo-spin {
+  animation: spin3d 4s linear infinite;
+  transform-style: preserve-3d;
+  display: inline-block;
+}
