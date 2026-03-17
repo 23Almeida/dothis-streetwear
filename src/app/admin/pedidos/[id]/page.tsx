@@ -47,7 +47,7 @@ export default async function AdminPedidoDetailPage({ params }: Props) {
   const status = STATUS_CONFIG[o.status] || { label: o.status, color: "text-neutral-400 bg-neutral-800" };
 
   return (
-    <div className="min-h-screen bg-black pt-16">
+    <div className="min-h-screen bg-black">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
 
         {/* Header */}

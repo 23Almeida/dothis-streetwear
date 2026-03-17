@@ -23,14 +23,8 @@ export default async function AdminProdutosPage() {
     .select("*, category:categories(name)")
     .order("created_at", { ascending: false });
 
-  const navLinks = [
-    { href: "/admin", label: "Dashboard" },
-    { href: "/admin/produtos", label: "Produtos" },
-    { href: "/admin/pedidos", label: "Pedidos" },
-  ];
-
   return (
-    <div className="min-h-screen bg-black pt-16">
+    <div className="min-h-screen bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
 
         {/* Header */}
@@ -46,19 +40,6 @@ export default async function AdminProdutosPage() {
             <Plus size={14} />
             Novo Produto
           </Link>
-        </div>
-
-        {/* Nav */}
-        <div className="flex gap-1 mb-10 border-b border-white/10">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="px-4 py-2 text-xs font-bold tracking-widest uppercase text-neutral-400 hover:text-white border-b-2 border-transparent hover:border-white transition-all"
-            >
-              {link.label}
-            </Link>
-          ))}
         </div>
 
         {/* Table */}

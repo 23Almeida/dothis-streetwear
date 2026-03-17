@@ -16,12 +16,6 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   cancelled:  { label: "Cancelado",    color: "text-red-400 bg-red-400/10" },
 };
 
-const navLinks = [
-  { href: "/admin", label: "Dashboard" },
-  { href: "/admin/produtos", label: "Produtos" },
-  { href: "/admin/pedidos", label: "Pedidos" },
-];
-
 export default async function AdminPedidosPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -37,7 +31,7 @@ export default async function AdminPedidosPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <div className="min-h-screen bg-black pt-16">
+    <div className="min-h-screen bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
 
         <div className="flex items-center justify-between mb-10">
@@ -46,16 +40,6 @@ export default async function AdminPedidosPage() {
             <h1 className="text-3xl font-black text-white">Pedidos</h1>
           </div>
           <span className="text-xs text-neutral-600">{orders?.length || 0} pedidos</span>
-        </div>
-
-        {/* Nav */}
-        <div className="flex gap-1 mb-10 border-b border-white/10">
-          {navLinks.map((link) => (
-            <Link key={link.href} href={link.href}
-              className="px-4 py-2 text-xs font-bold tracking-widest uppercase text-neutral-400 hover:text-white border-b-2 border-transparent hover:border-white transition-all">
-              {link.label}
-            </Link>
-          ))}
         </div>
 
         {/* Table */}

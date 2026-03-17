@@ -63,38 +63,14 @@ export default async function AdminPage() {
     { label: "Clientes", value: userCount || 0, icon: Users, href: "/admin/pedidos" },
   ];
 
-  const navLinks = [
-    { href: "/admin", label: "Dashboard" },
-    { href: "/admin/produtos", label: "Produtos" },
-    { href: "/admin/pedidos", label: "Pedidos" },
-  ];
-
   return (
-    <div className="min-h-screen bg-black pt-16">
+    <div className="min-h-screen bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-10">
-          <div>
-            <p className="text-xs font-bold tracking-[0.4em] uppercase text-neutral-500 mb-1">Painel</p>
-            <h1 className="text-3xl font-black text-white">Admin</h1>
-          </div>
-          <Link href="/" className="text-xs text-neutral-500 hover:text-white transition-colors tracking-widest uppercase">
-            Ver Site →
-          </Link>
-        </div>
-
-        {/* Nav */}
-        <div className="flex gap-1 mb-10 border-b border-white/10 pb-0">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="px-4 py-2 text-xs font-bold tracking-widest uppercase text-neutral-400 hover:text-white border-b-2 border-transparent hover:border-white transition-all"
-            >
-              {link.label}
-            </Link>
-          ))}
+        <div className="mb-10">
+          <p className="text-xs font-bold tracking-[0.4em] uppercase text-neutral-500 mb-1">Painel</p>
+          <h1 className="text-3xl font-black text-white">Dashboard</h1>
         </div>
 
         {/* Stats */}
