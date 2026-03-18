@@ -7,7 +7,7 @@ import { useCartStore } from "@/store/cart";
 import { formatPrice } from "@/lib/utils";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import { Loader2, MapPin } from "lucide-react";
+import { Loader2, MapPin, Tag, CheckCircle, X } from "lucide-react";
 
 const ESTADOS = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"
@@ -22,12 +22,25 @@ function calcShipping(state: string, subtotal: number): number {
   return 25;
 }
 
+interface CouponResult {
+  couponId: string;
+  code: string;
+  discountAmount: number;
+  description: string;
+}
+
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCartStore();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Coupon state
+  const [couponCode, setCouponCode] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponResult | null>(null);
 
   const [address, setAddress] = useState({
     name: "",
@@ -43,13 +56,11 @@ export default function CheckoutPage() {
 
   const sub = subtotal();
   const shipping = calcShipping(address.state, sub);
-  const total = sub + shipping;
+  const discount = appliedCoupon?.discountAmount ?? 0;
+  const total = Math.max(0, sub + shipping - discount);
 
   const handleChange = (field: string, value: string) => {
-    setAddress((prev) => {
-      const updated = { ...prev, [field]: value };
-      return updated;
-    });
+    setAddress((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleCepLookup = async () => {
@@ -72,6 +83,34 @@ export default function CheckoutPage() {
     setCepLoading(false);
   };
 
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    setCouponError("");
+    try {
+      const res = await fetch("/api/coupon/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode, subtotal: sub }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setCouponError(data.error || "Cupom inválido");
+      } else {
+        setAppliedCoupon(data);
+        setCouponCode("");
+      }
+    } catch {
+      setCouponError("Erro ao validar cupom");
+    }
+    setCouponLoading(false);
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponError("");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!address.name || !address.zip || !address.street || !address.number || !address.city) {
@@ -86,7 +125,15 @@ export default function CheckoutPage() {
       const res = await fetch("/api/payment/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, address, subtotal: sub, shipping, total }),
+        body: JSON.stringify({
+          items,
+          address,
+          subtotal: sub,
+          shipping,
+          discount,
+          total,
+          couponId: appliedCoupon?.couponId ?? null,
+        }),
       });
 
       const data = await res.json();
@@ -98,8 +145,6 @@ export default function CheckoutPage() {
       }
 
       clearCart();
-
-      // Redirect to Mercado Pago
       const isSandbox = process.env.NEXT_PUBLIC_MP_SANDBOX === "true";
       window.location.href = isSandbox ? data.sandboxInitPoint : data.initPoint;
     } catch {
@@ -148,7 +193,6 @@ export default function CheckoutPage() {
                   Endereço de Entrega
                 </h2>
 
-                {/* CEP */}
                 <div className="flex gap-3 mb-4">
                   <div className="flex-1">
                     <Input
@@ -171,11 +215,7 @@ export default function CheckoutPage() {
                       disabled={cepLoading}
                       className="h-[46px] px-4 bg-neutral-900 border border-neutral-700 text-neutral-400 hover:text-white hover:border-white transition-colors flex items-center gap-2 text-xs"
                     >
-                      {cepLoading ? (
-                        <Loader2 size={14} className="animate-spin" />
-                      ) : (
-                        <MapPin size={14} />
-                      )}
+                      {cepLoading ? <Loader2 size={14} className="animate-spin" /> : <MapPin size={14} />}
                       Buscar
                     </button>
                   </div>
@@ -232,6 +272,58 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Coupon */}
+              <div>
+                <h2 className="text-xs font-bold tracking-widest uppercase text-neutral-400 mb-4">
+                  Cupom de Desconto
+                </h2>
+
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between bg-green-950 border border-green-800 px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle size={16} className="text-green-400 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-bold text-green-400">{appliedCoupon.code}</p>
+                        <p className="text-xs text-green-600">{appliedCoupon.description} aplicado</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoupon}
+                      className="text-neutral-500 hover:text-white transition-colors"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <Input
+                        placeholder="PRIMEIRACOMPRA"
+                        value={couponCode}
+                        onChange={(e) => {
+                          setCouponCode(e.target.value.toUpperCase());
+                          setCouponError("");
+                        }}
+                        onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleApplyCoupon())}
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <button
+                        type="button"
+                        onClick={handleApplyCoupon}
+                        disabled={couponLoading || !couponCode.trim()}
+                        className="h-[46px] px-4 bg-neutral-900 border border-neutral-700 text-neutral-400 hover:text-white hover:border-white transition-colors flex items-center gap-2 text-xs disabled:opacity-50"
+                      >
+                        {couponLoading ? <Loader2 size={14} className="animate-spin" /> : <Tag size={14} />}
+                        Aplicar
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {couponError && <p className="text-red-500 text-xs mt-2">{couponError}</p>}
+              </div>
             </div>
 
             {/* Right: Summary */}
@@ -274,6 +366,13 @@ export default function CheckoutPage() {
                     <p className="text-xs text-neutral-600">
                       Frete grátis para compras acima de {formatPrice(299)}
                     </p>
+                  )}
+
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-green-400">
+                      <span>Desconto ({appliedCoupon.code})</span>
+                      <span>-{formatPrice(discount)}</span>
+                    </div>
                   )}
 
                   <hr className="border-white/10 my-1" />
