@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { defaultSettings, type SiteSettings } from "@/lib/settings";
 
 const ALLOWED_KEYS: ReadonlySet<keyof SiteSettings> = new Set([
-  "brand", "announcement", "hero", "social", "contact", "pages", "seo", "marquee",
+  "brand", "announcement", "hero", "social", "contact", "pages", "seo", "marquee", "categories", "newsletter",
 ]);
 
 const MAX_VALUE_SIZE = 16 * 1024;

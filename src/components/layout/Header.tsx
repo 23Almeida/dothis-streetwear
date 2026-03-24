@@ -21,10 +21,13 @@ const navLinks = [
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const { toggleCart, totalItems } = useCartStore();
   const { profile, signOut } = useAuth();
   const count = totalItems();
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -145,7 +148,7 @@ export default function Header() {
                 className="p-2 text-neutral-400 hover:text-white transition-colors relative"
               >
                 <ShoppingBag size={20} />
-                {count > 0 && (
+                {mounted && count > 0 && (
                   <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-white text-black text-[10px] font-bold flex items-center justify-center">
                     {count > 9 ? "9+" : count}
                   </span>

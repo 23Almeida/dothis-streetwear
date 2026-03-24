@@ -1,70 +1,110 @@
-import Link from "next/link";
+"use client";
 
-const categories = [
-  {
-    name: "Camisetas",
-    slug: "camisetas",
-    image: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800",
-    span: "col-span-2 row-span-2",
-  },
-  {
-    name: "Moletons",
-    slug: "moletons",
-    image: "https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=800",
-    span: "col-span-1",
-  },
-  {
-    name: "Calças",
-    slug: "calcas",
-    image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=800",
-    span: "col-span-1",
-  },
-  {
-    name: "Jaquetas",
-    slug: "jaquetas",
-    image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800",
-    span: "col-span-2",
-  },
-];
+import { useState } from "react";
+import Link from "next/link";
+import { Pencil } from "lucide-react";
+import { useSite } from "@/context/SiteContext";
+import { useAuth } from "@/hooks/useAuth";
+import CategoryEditor from "@/components/editor/CategoryEditor";
+
+function MosaicLayout({ items }: { items: Array<{ name: string; slug: string; image: string }> }) {
+  const all = items.slice(0, 4);
+  const spans = ["col-span-2 row-span-2", "col-span-1", "col-span-1", "col-span-2"];
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 grid-rows-2 gap-4 h-[600px]">
+      {all.map((cat, i) => (
+        <CategoryCard key={cat.slug || i} cat={cat} spanClass={spans[i] ?? ""} />
+      ))}
+    </div>
+  );
+}
+
+function EqualLayout({ items }: { items: Array<{ name: string; slug: string; image: string }> }) {
+  const all = items.slice(0, 4);
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-2 gap-4 h-[600px]">
+      {all.map((cat, i) => (
+        <CategoryCard key={cat.slug || i} cat={cat} spanClass="" />
+      ))}
+    </div>
+  );
+}
+
+function PortraitLayout({ items }: { items: Array<{ name: string; slug: string; image: string }> }) {
+  const all = items.slice(0, 4);
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 h-[500px]">
+      {all.map((cat, i) => (
+        <CategoryCard key={cat.slug || i} cat={cat} spanClass="" />
+      ))}
+    </div>
+  );
+}
+
+function CategoryCard({ cat, spanClass }: { cat: { name: string; slug: string; image: string }; spanClass: string }) {
+  return (
+    <Link
+      href={`/shop?category=${cat.slug}`}
+      className={`relative overflow-hidden group bg-neutral-900 ${spanClass}`}
+    >
+      <div
+        className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+        style={{ backgroundImage: `url('${cat.image}')`, opacity: 0.5 }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 p-5">
+        <h3 className="text-lg font-black tracking-widest uppercase text-white">{cat.name}</h3>
+        <span className="text-xs text-neutral-400 group-hover:text-white transition-colors tracking-widest uppercase">
+          Ver Coleção →
+        </span>
+      </div>
+    </Link>
+  );
+}
 
 export default function CategoryBanner() {
+  const { settings, editMode } = useSite();
+  const { profile } = useAuth();
+  const [editorOpen, setEditorOpen] = useState(false);
+
+  const isAdmin = profile?.role === "admin";
+  const cats = settings.categories;
+
   return (
-    <section className="py-20 px-4 sm:px-6 max-w-7xl mx-auto">
+    <section className="py-20 px-4 sm:px-6 max-w-7xl mx-auto relative group/cats">
+      {/* Edit overlay */}
+      {isAdmin && editMode && (
+        <button
+          onClick={() => setEditorOpen(true)}
+          className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-orange-500 text-black text-[10px] font-black uppercase tracking-wider px-3 py-2 hover:bg-orange-400 transition-colors"
+        >
+          <Pencil size={12} /> Editar Categorias
+        </button>
+      )}
+
+      {isAdmin && editMode && (
+        <div className="absolute inset-0 border-2 border-orange-500/40 pointer-events-none rounded" />
+      )}
+
       <div className="mb-12">
         <p className="text-xs font-bold tracking-[0.4em] uppercase text-neutral-500 mb-2">
-          Categorias
+          {cats.subtitle}
         </p>
         <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
-          Explore por Estilo
+          {cats.title}
         </h2>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 grid-rows-2 gap-4 h-[600px]">
-        {categories.map((cat) => (
-          <Link
-            key={cat.slug}
-            href={`/shop?category=${cat.slug}`}
-            className={`relative overflow-hidden group bg-neutral-900 ${cat.span}`}
-          >
-            <div
-              className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-              style={{
-                backgroundImage: `url('${cat.image}')`,
-                opacity: 0.5,
-              }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-5">
-              <h3 className="text-lg font-black tracking-widest uppercase text-white">
-                {cat.name}
-              </h3>
-              <span className="text-xs text-neutral-400 group-hover:text-white transition-colors tracking-widest uppercase">
-                Ver Coleção →
-              </span>
-            </div>
-          </Link>
-        ))}
-      </div>
+      {cats.layout === "equal" ? (
+        <EqualLayout items={cats.items} />
+      ) : cats.layout === "portrait" ? (
+        <PortraitLayout items={cats.items} />
+      ) : (
+        <MosaicLayout items={cats.items} />
+      )}
+
+      {editorOpen && <CategoryEditor onClose={() => setEditorOpen(false)} />}
     </section>
   );
 }

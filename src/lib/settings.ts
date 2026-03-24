@@ -48,6 +48,18 @@ export interface SiteSettings {
     description: string;
     keywords: string;
   };
+  categories: {
+    title: string;
+    subtitle: string;
+    layout: "mosaic" | "equal" | "portrait";
+    items: Array<{ name: string; slug: string; image: string }>;
+  };
+  newsletter: {
+    title: string;
+    subtitle: string;
+    description: string;
+    buttonText: string;
+  };
 }
 
 export const defaultSettings: SiteSettings = {
@@ -80,4 +92,21 @@ export const defaultSettings: SiteSettings = {
     termos: "Termos de uso.",
   },
   seo: { title: "DOTHIS Streetwear", description: "Moda streetwear masculina.", keywords: "streetwear" },
+  newsletter: {
+    title: "Seja o Primeiro a Saber",
+    subtitle: "Newsletter",
+    description: "Cadastre-se para receber drops exclusivos, promoções e novidades antes de todo mundo.",
+    buttonText: "Cadastrar",
+  },
+  categories: {
+    title: "Explore por Estilo",
+    subtitle: "Categorias",
+    layout: "mosaic",
+    items: [
+      { name: "Camisetas", slug: "camisetas", image: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800" },
+      { name: "Moletons", slug: "moletons", image: "https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=800" },
+      { name: "Calças", slug: "calcas", image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=800" },
+      { name: "Jaquetas", slug: "jaquetas", image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800" },
+    ],
+  },
 };
