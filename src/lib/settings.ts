@@ -16,6 +16,10 @@ export interface SiteSettings {
     description: string;
     ctaText: string;
     ctaLink: string;
+    backgroundImage: string;
+  };
+  marquee: {
+    items: string;
   };
   social: {
     instagram: string;
@@ -60,6 +64,10 @@ export const defaultSettings: SiteSettings = {
     description: "Peças limitadas. Estética brutal. Sem desculpas.",
     ctaText: "Shop Now",
     ctaLink: "/shop",
+    backgroundImage: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920",
+  },
+  marquee: {
+    items: "Streetwear Nacional · Drop Exclusivo · Entrega Rápida · Qualidade Premium · Edição Limitada · Estilo Urbano",
   },
   social: { instagram: "", twitter: "", youtube: "", whatsapp: "", tiktok: "" },
   contact: { email: "", whatsapp: "", address: "", city: "", hours: "Seg–Sex, 9h–18h" },

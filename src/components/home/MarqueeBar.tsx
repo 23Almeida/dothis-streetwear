@@ -1,22 +1,35 @@
-const items = [
-  "Streetwear Nacional",
-  "Drop Exclusivo",
-  "Entrega Rápida",
-  "Qualidade Premium",
-  "Edição Limitada",
-  "Estilo Urbano",
-];
+"use client";
+
+import EditableSection from "@/components/editor/EditableSection";
+import { useSite } from "@/context/SiteContext";
 
 export default function MarqueeBar() {
+  const { settings } = useSite();
+  const raw = settings.marquee?.items || "Streetwear Nacional · Drop Exclusivo · Qualidade Premium";
+  const items = raw.split("·").map((s) => s.trim()).filter(Boolean);
+
+  const repeated = [...items, ...items, ...items];
+
   return (
-    <div className="bg-white text-black py-3 overflow-hidden">
-      <div className="flex animate-marquee whitespace-nowrap">
-        {[...items, ...items, ...items].map((item, i) => (
-          <span key={i} className="text-xs font-black tracking-[0.3em] uppercase mx-8">
-            {item} <span className="mx-4 opacity-40">✦</span>
-          </span>
-        ))}
+    <EditableSection
+      section="marquee"
+      label="Faixa de Texto"
+      fields={[{
+        key: "items",
+        label: "Frases (separadas por ·)",
+        placeholder: "Streetwear Nacional · Drop Exclusivo · Qualidade Premium",
+        rows: 3,
+      }]}
+    >
+      <div className="bg-white text-black py-3 overflow-hidden">
+        <div className="flex animate-marquee whitespace-nowrap">
+          {repeated.map((item, i) => (
+            <span key={i} className="text-xs font-black tracking-[0.3em] uppercase mx-8">
+              {item} <span className="mx-4 opacity-40">✦</span>
+            </span>
+          ))}
+        </div>
       </div>
-    </div>
+    </EditableSection>
   );
 }

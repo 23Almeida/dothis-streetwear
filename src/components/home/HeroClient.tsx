@@ -19,13 +19,16 @@ export default function HeroClient() {
         { key: "description", label: "Descrição", placeholder: "Peças limitadas...", rows: 3 },
         { key: "ctaText", label: "Texto do botão", placeholder: "Shop Now" },
         { key: "ctaLink", label: "Link do botão", placeholder: "/shop" },
+        { key: "backgroundImage", label: "URL da foto de fundo", type: "url", placeholder: "https://..." },
       ]}
     >
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920')" }}
-        />
+        {hero.backgroundImage && (
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40"
+            style={{ backgroundImage: `url('${hero.backgroundImage}')` }}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black" />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
