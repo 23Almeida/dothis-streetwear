@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/utils";
-import { Package, ShoppingBag, Users, TrendingUp } from "lucide-react";
+import { Package, ShoppingBag, Users, Settings } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin — Dashboard" };
@@ -61,6 +61,7 @@ export default async function AdminPage() {
     { label: "Produtos", value: productCount || 0, icon: Package, href: "/admin/produtos" },
     { label: "Pedidos", value: orderCount || 0, icon: ShoppingBag, href: "/admin/pedidos" },
     { label: "Clientes", value: userCount || 0, icon: Users, href: "/admin/pedidos" },
+    { label: "Configurações", value: "→", icon: Settings, href: "/admin/configuracoes" },
   ];
 
   return (
