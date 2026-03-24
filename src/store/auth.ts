@@ -17,6 +17,14 @@ export const useAuthStore = create<AuthStore>()(
       setProfile: (profile) => set({ profile }),
       setLoading: (isLoading) => set({ isLoading }),
     }),
-    { name: "dothis-auth" }
+    {
+      name: "dothis-auth",
+      // Only persist role to show admin UI immediately — full profile re-fetched from Supabase on mount
+      partialize: (state) => ({
+        profile: state.profile
+          ? { id: state.profile.id, role: state.profile.role }
+          : null,
+      }),
+    }
   )
 );

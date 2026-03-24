@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
+import FooterClient from "@/components/layout/FooterClient";
 import CartDrawer from "@/components/layout/CartDrawer";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import AdminBar from "@/components/editor/AdminBar";
@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AnnouncementBar />
           <Header />
           <main className="min-h-screen">{children}</main>
-          <Footer />
+          <FooterClient />
           <CartDrawer />
           <AdminBar />
         </SiteProvider>

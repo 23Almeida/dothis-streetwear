@@ -8,7 +8,7 @@ import type { SiteSettings } from "@/lib/settings";
 export interface EditField {
   key: string;
   label: string;
-  type?: "text" | "textarea" | "url" | "email" | "checkbox" | "color";
+  type?: "text" | "textarea" | "url" | "email" | "checkbox";
   placeholder?: string;
   rows?: number;
 }
@@ -20,27 +20,16 @@ interface EditModalProps {
   onClose: () => void;
 }
 
-// Sanitize string input to prevent XSS
-function sanitize(value: string): string {
-  return value
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/javascript:/gi, "")
-    .replace(/on\w+=/gi, "");
-}
-
 export default function EditModal({ section, title, fields, onClose }: EditModalProps) {
   const { settings, updateSection, saving } = useSite();
-  const current = settings[section] as any;
+  const current = settings[section] as Record<string, any>;
 
   const [form, setForm] = useState<Record<string, any>>({});
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    const initial: Record<string, any> = {};
-    fields.forEach((f) => { initial[f.key] = current?.[f.key] ?? ""; });
-    setForm(initial);
-  }, [section]);
+    setForm(Object.fromEntries(fields.map((f) => [f.key, current?.[f.key] ?? ""])));
+  }, [section, current]);
 
   const handleChange = (key: string, value: any) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -48,24 +37,18 @@ export default function EditModal({ section, title, fields, onClose }: EditModal
   };
 
   const handleSave = async () => {
-    // Sanitize all string values
-    const clean: Record<string, any> = {};
-    for (const [k, v] of Object.entries(form)) {
-      clean[k] = typeof v === "string" ? sanitize(v) : v;
-    }
-    await updateSection(section, clean);
+    await updateSection(section, form);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
 
+  const inputClass = "w-full bg-neutral-900 border border-neutral-700 text-white placeholder:text-neutral-600 px-3 py-2.5 text-sm focus:outline-none focus:border-white";
+
   return (
     <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-end">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Panel */}
       <div className="relative z-10 w-full sm:w-[420px] h-full sm:h-auto sm:max-h-[90vh] bg-neutral-950 border-l border-white/10 flex flex-col shadow-2xl">
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 flex-shrink-0">
           <div>
             <p className="text-[10px] text-neutral-500 uppercase tracking-widest">Editando</p>
@@ -76,7 +59,6 @@ export default function EditModal({ section, title, fields, onClose }: EditModal
           </button>
         </div>
 
-        {/* Fields */}
         <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-5">
           {fields.map((field) => (
             <div key={field.key} className="flex flex-col gap-1.5">
@@ -100,7 +82,7 @@ export default function EditModal({ section, title, fields, onClose }: EditModal
                   onChange={(e) => handleChange(field.key, e.target.value)}
                   placeholder={field.placeholder}
                   rows={field.rows}
-                  className="w-full bg-neutral-900 border border-neutral-700 text-white placeholder:text-neutral-600 px-3 py-2.5 text-sm focus:outline-none focus:border-white resize-y"
+                  className={`${inputClass} resize-y`}
                 />
               ) : (
                 <input
@@ -108,27 +90,22 @@ export default function EditModal({ section, title, fields, onClose }: EditModal
                   value={form[field.key] || ""}
                   onChange={(e) => handleChange(field.key, e.target.value)}
                   placeholder={field.placeholder}
-                  className="w-full bg-neutral-900 border border-neutral-700 text-white placeholder:text-neutral-600 px-3 py-2.5 text-sm focus:outline-none focus:border-white"
+                  className={inputClass}
                 />
               )}
             </div>
           ))}
         </div>
 
-        {/* Footer */}
         <div className="flex items-center gap-3 px-6 py-4 border-t border-white/10 flex-shrink-0">
           <button
             onClick={handleSave}
             disabled={saving}
             className="flex-1 flex items-center justify-center gap-2 bg-white text-black text-xs font-black uppercase tracking-widest py-3 hover:bg-neutral-200 transition-colors disabled:opacity-50"
           >
-            {saving ? (
-              <span className="animate-pulse">Salvando...</span>
-            ) : saved ? (
-              <><Check size={14} /> Salvo!</>
-            ) : (
-              <><Save size={14} /> Salvar</>
-            )}
+            {saving ? <span className="animate-pulse">Salvando...</span>
+              : saved ? <><Check size={14} /> Salvo!</>
+              : <><Save size={14} /> Salvar</>}
           </button>
           <button
             onClick={onClose}

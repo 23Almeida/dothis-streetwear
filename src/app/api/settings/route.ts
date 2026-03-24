@@ -2,16 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { defaultSettings, type SiteSettings } from "@/lib/settings";
 
-// Allowed setting keys — prevents injection of arbitrary keys
-const ALLOWED_KEYS = new Set(["brand", "announcement", "hero", "social", "contact", "pages", "seo"]);
+const ALLOWED_KEYS: ReadonlySet<keyof SiteSettings> = new Set([
+  "brand", "announcement", "hero", "social", "contact", "pages", "seo",
+]);
 
-// Max value size in bytes (16KB per section)
 const MAX_VALUE_SIZE = 16 * 1024;
 
-// Simple in-memory rate limiter (per IP, resets each minute)
+// Rate limiter — cleans expired entries on each check to prevent unbounded growth
 const rateLimitMap = new Map<string, { count: number; reset: number }>();
-function checkRateLimit(ip: string, limit = 30): boolean {
+function checkRateLimit(ip: string, limit = 60): boolean {
   const now = Date.now();
+  // Purge expired entries to prevent memory leak
+  for (const [key, val] of rateLimitMap) {
+    if (val.reset < now) rateLimitMap.delete(key);
+  }
   const entry = rateLimitMap.get(ip);
   if (!entry || entry.reset < now) {
     rateLimitMap.set(ip, { count: 1, reset: now + 60_000 });
@@ -22,8 +26,7 @@ function checkRateLimit(ip: string, limit = 30): boolean {
   return true;
 }
 
-// Strip dangerous content from values
-function sanitizeValue(value: any): any {
+function sanitizeValue(value: unknown): unknown {
   if (typeof value === "string") {
     return value
       .replace(/javascript:/gi, "")
@@ -31,12 +34,10 @@ function sanitizeValue(value: any): any {
       .replace(/<script[\s\S]*?<\/script>/gi, "")
       .slice(0, 5000);
   }
-  if (typeof value === "object" && value !== null) {
-    const clean: any = {};
-    for (const [k, v] of Object.entries(value)) {
-      if (typeof k === "string" && k.length < 100) {
-        clean[k] = sanitizeValue(v);
-      }
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+    const clean: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (k.length < 100) clean[k] = sanitizeValue(v);
     }
     return clean;
   }
@@ -46,11 +47,11 @@ function sanitizeValue(value: any): any {
 export async function GET() {
   try {
     const supabase = await createClient();
-    const { data, error } = await (supabase as any)
+    const { data } = await (supabase as any)
       .from("site_settings")
       .select("key, value");
 
-    if (error || !data) return NextResponse.json(defaultSettings);
+    if (!data) return NextResponse.json(defaultSettings);
 
     const settings: any = { ...defaultSettings };
     for (const row of data) {
@@ -68,31 +69,21 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  // Rate limiting
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
-  if (!checkRateLimit(ip, 60)) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
+  if (!checkRateLimit(ip)) {
     return NextResponse.json({ error: "Muitas requisições. Aguarde um momento." }, { status: 429 });
   }
 
-  // Auth check
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  }
+  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  // Admin role check (double-verified server-side)
   const { data: profile } = await (supabase as any)
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
+    .from("profiles").select("role").eq("id", user.id).single();
   if (profile?.role !== "admin") {
     return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
   }
 
-  // Parse + validate body
   let updates: Partial<SiteSettings>;
   try {
     const text = await request.text();
@@ -104,16 +95,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
   }
 
-  // Only allow known keys
-  const db = supabase as any;
-  for (const [key, value] of Object.entries(updates)) {
-    if (!ALLOWED_KEYS.has(key)) continue;
-    const clean = sanitizeValue(value);
-    await db.from("site_settings").upsert({
+  // Batch upsert — single DB round trip instead of N sequential writes
+  const rows = Object.entries(updates)
+    .filter(([key]) => ALLOWED_KEYS.has(key as keyof SiteSettings))
+    .map(([key, value]) => ({
       key,
-      value: clean,
+      value: sanitizeValue(value),
       updated_at: new Date().toISOString(),
-    });
+    }));
+
+  if (rows.length > 0) {
+    await (supabase as any).from("site_settings").upsert(rows);
   }
 
   return NextResponse.json({ success: true });
