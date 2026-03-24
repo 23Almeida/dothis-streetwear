@@ -1,4 +1,4 @@
-import Hero from "@/components/home/Hero";
+import HeroClient from "@/components/home/HeroClient";
 import MarqueeBar from "@/components/home/MarqueeBar";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 import CategoryBanner from "@/components/home/CategoryBanner";
@@ -29,7 +29,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <Hero />
+      <HeroClient />
       <MarqueeBar />
       <FeaturedProducts products={featuredProducts} />
       <CategoryBanner />
