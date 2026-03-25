@@ -105,7 +105,11 @@ export async function POST(request: NextRequest) {
     }));
 
   if (rows.length > 0) {
-    await (supabase as any).from("site_settings").upsert(rows);
+    const { error } = await (supabase as any).from("site_settings").upsert(rows);
+    if (error) {
+      console.error("Settings upsert error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ success: true });

@@ -7,7 +7,7 @@ interface SiteContextType {
   settings: SiteSettings;
   editMode: boolean;
   toggleEditMode: () => void;
-  updateSection: (section: keyof SiteSettings, values: Partial<SiteSettings[keyof SiteSettings]>) => Promise<void>;
+  updateSection: (section: keyof SiteSettings, values: Partial<SiteSettings[keyof SiteSettings]>) => Promise<{ ok: boolean; error?: string }>;
   saving: boolean;
 }
 
@@ -15,7 +15,7 @@ const SiteContext = createContext<SiteContextType>({
   settings: defaultSettings,
   editMode: false,
   toggleEditMode: () => {},
-  updateSection: async () => {},
+  updateSection: async () => ({ ok: false }),
   saving: false,
 });
 
@@ -36,23 +36,32 @@ export function SiteProvider({ children }: { children: ReactNode }) {
   const updateSection = useCallback(async (
     section: keyof SiteSettings,
     values: Partial<SiteSettings[keyof SiteSettings]>
-  ) => {
+  ): Promise<{ ok: boolean; error?: string }> => {
     setSaving(true);
+    const prev = settings;
     // Optimistic update
-    setSettings((prev) => ({ ...prev, [section]: { ...(prev[section] as any), ...values } }));
+    setSettings((s) => ({ ...s, [section]: { ...(s[section] as any), ...values } }));
     try {
       const res = await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ [section]: values }),
       });
-      if (!res.ok) throw new Error();
+      const data = await res.json();
+      if (!res.ok) {
+        // Revert on failure
+        setSettings(prev);
+        setSaving(false);
+        return { ok: false, error: data?.error || `Erro ${res.status}` };
+      }
     } catch {
-      // Revert to server state on failure
-      fetch("/api/settings").then((r) => r.json()).then(setSettings).catch(() => {});
+      setSettings(prev);
+      setSaving(false);
+      return { ok: false, error: "Erro de conexão" };
     }
     setSaving(false);
-  }, []);
+    return { ok: true };
+  }, [settings]);
 
   return (
     <SiteContext.Provider value={{ settings, editMode, toggleEditMode, updateSection, saving }}>

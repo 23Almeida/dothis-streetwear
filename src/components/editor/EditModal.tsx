@@ -26,6 +26,7 @@ export default function EditModal({ section, title, fields, onClose }: EditModal
 
   const [form, setForm] = useState<Record<string, any>>({});
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     setForm(Object.fromEntries(fields.map((f) => [f.key, current?.[f.key] ?? ""])));
@@ -37,9 +38,14 @@ export default function EditModal({ section, title, fields, onClose }: EditModal
   };
 
   const handleSave = async () => {
-    await updateSection(section, form);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSaveError(null);
+    const result = await updateSection(section, form);
+    if (result.ok) {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } else {
+      setSaveError(result.error ?? "Erro ao salvar");
+    }
   };
 
   const inputClass = "w-full bg-neutral-900 border border-neutral-700 text-white placeholder:text-neutral-600 px-3 py-2.5 text-sm focus:outline-none focus:border-white";
@@ -96,6 +102,12 @@ export default function EditModal({ section, title, fields, onClose }: EditModal
             </div>
           ))}
         </div>
+
+        {saveError && (
+          <div className="px-6 py-3 bg-red-950 border-t border-red-800 text-red-400 text-xs">
+            {saveError}
+          </div>
+        )}
 
         <div className="flex items-center gap-3 px-6 py-4 border-t border-white/10 flex-shrink-0">
           <button
