@@ -46,17 +46,17 @@ function CategoryCard({ cat, spanClass }: { cat: { name: string; slug: string; i
   return (
     <Link
       href={`/shop?category=${cat.slug}`}
-      className={`relative overflow-hidden group bg-neutral-900 ${spanClass}`}
+      className={`relative overflow-hidden group bg-neutral-950 ${spanClass}`}
     >
       <div
         className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-        style={{ backgroundImage: `url('${cat.image}')`, opacity: 0.5 }}
+        style={{ backgroundImage: `url('${cat.image}')`, opacity: 0.65 }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 p-5">
-        <h3 className="text-lg font-black tracking-widest uppercase text-white">{cat.name}</h3>
-        <span className="text-xs text-neutral-400 group-hover:text-white transition-colors tracking-widest uppercase">
-          Ver Coleção →
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 p-6">
+        <h3 className="font-display text-2xl tracking-wider uppercase text-white leading-none mb-1">{cat.name}</h3>
+        <span className="text-[10px] font-bold text-neutral-400 group-hover:text-white transition-colors tracking-[0.2em] uppercase flex items-center gap-1.5">
+          Ver Coleção <span className="transition-transform duration-200 group-hover:translate-x-1">→</span>
         </span>
       </div>
     </Link>
@@ -72,7 +72,7 @@ export default function CategoryBanner() {
   const cats = settings.categories;
 
   return (
-    <section className="py-20 px-4 sm:px-6 max-w-7xl mx-auto relative group/cats">
+    <section className="py-24 px-4 sm:px-6 max-w-7xl mx-auto relative group/cats">
       {/* Edit overlay */}
       {isAdmin && editMode && (
         <button
@@ -88,10 +88,10 @@ export default function CategoryBanner() {
       )}
 
       <div className="mb-12">
-        <p className="text-xs font-bold tracking-[0.4em] uppercase text-neutral-500 mb-2">
+        <p className="text-[10px] font-bold tracking-[0.5em] uppercase text-neutral-500 mb-3">
           {cats.subtitle}
         </p>
-        <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
+        <h2 className="font-display text-5xl sm:text-6xl tracking-wide text-white leading-none">
           {cats.title}
         </h2>
       </div>

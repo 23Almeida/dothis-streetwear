@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #000000;
+  --background: #0a0a0a;
   --foreground: #ffffff;
   --font-sans: var(--font-inter);
 }
@@ -10,17 +10,18 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter);
+  --font-display: var(--font-bebas-neue);
 
   --animate-marquee: marquee 30s linear infinite;
 
   @keyframes marquee {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-50%);
-    }
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
   }
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 * {
@@ -52,16 +53,4 @@ body {
 ::selection {
   background: #ffffff;
   color: #000000;
-}
-
-/* Logo 3D spin */
-@keyframes spin3d {
-  from { transform: rotateY(0deg); }
-  to   { transform: rotateY(360deg); }
-}
-
-.logo-spin {
-  animation: spin3d 4s linear infinite;
-  transform-style: preserve-3d;
-  display: inline-block;
 }

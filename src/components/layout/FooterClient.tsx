@@ -97,7 +97,7 @@ export default function FooterClient() {
             <ul className="flex flex-col gap-3">
               {shopLinks.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-neutral-500 hover:text-white transition-colors">{link.label}</Link>
+                  <Link href={link.href} className="text-sm text-neutral-500 hover:text-white transition-all duration-200 hover:translate-x-1 inline-block">{link.label}</Link>
                 </li>
               ))}
             </ul>
@@ -109,7 +109,7 @@ export default function FooterClient() {
             <ul className="flex flex-col gap-3">
               {infoLinks.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-neutral-500 hover:text-white transition-colors">{link.label}</Link>
+                  <Link href={link.href} className="text-sm text-neutral-500 hover:text-white transition-all duration-200 hover:translate-x-1 inline-block">{link.label}</Link>
                 </li>
               ))}
             </ul>
@@ -121,7 +121,7 @@ export default function FooterClient() {
             <ul className="flex flex-col gap-3">
               {accountLinks.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-neutral-500 hover:text-white transition-colors">{link.label}</Link>
+                  <Link href={link.href} className="text-sm text-neutral-500 hover:text-white transition-all duration-200 hover:translate-x-1 inline-block">{link.label}</Link>
                 </li>
               ))}
             </ul>

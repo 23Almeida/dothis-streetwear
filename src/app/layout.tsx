@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import FooterClient from "@/components/layout/FooterClient";
@@ -9,6 +9,7 @@ import AdminBar from "@/components/editor/AdminBar";
 import { SiteProvider } from "@/context/SiteContext";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const bebasNeue = Bebas_Neue({ weight: "400", subsets: ["latin"], variable: "--font-bebas-neue" });
 
 export const metadata: Metadata = {
   title: { default: "DOTHIS — Streetwear Nacional", template: "%s | DOTHIS" },
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
-      <body className={`${inter.variable} font-sans bg-black text-white antialiased`}>
+      <body className={`${inter.variable} ${bebasNeue.variable} font-sans bg-[#0a0a0a] text-white antialiased`}>
         <SiteProvider>
           <AnnouncementBar />
           <Header />

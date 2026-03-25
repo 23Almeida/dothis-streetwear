@@ -59,7 +59,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           setImageIdx(0);
         }}
       >
-        <div className="relative aspect-[3/4] bg-neutral-900 overflow-hidden">
+        <div className="relative aspect-[3/4] bg-neutral-950 overflow-hidden">
           {product.images[imageIdx] ? (
             <Image
               src={product.images[imageIdx]}
@@ -84,7 +84,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           {!isSoldOut && (
             <button
               onClick={handleQuickAdd}
-              className={`absolute bottom-0 left-0 right-0 bg-white text-black py-3 text-xs font-bold tracking-widest uppercase transition-all duration-300 ${
+              className={`absolute bottom-0 left-0 right-0 bg-white text-black py-3.5 text-[10px] font-black tracking-[0.2em] uppercase transition-all duration-300 ${
                 isHovered ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
               }`}
             >
@@ -93,14 +93,14 @@ export default function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        <div className="pt-3 pb-1">
-          <h3 className="text-sm font-medium text-white group-hover/card:text-neutral-300 transition-colors truncate">
+        <div className="pt-4 pb-2">
+          <h3 className="text-sm font-semibold text-white group-hover/card:text-neutral-300 transition-colors truncate tracking-wide">
             {product.name}
           </h3>
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-2.5 mt-1.5">
             <span className="text-sm font-bold text-white">{formatPrice(product.price)}</span>
             {isOnSale && product.compare_at_price && (
-              <span className="text-xs text-neutral-500 line-through">
+              <span className="text-xs text-neutral-600 line-through">
                 {formatPrice(product.compare_at_price)}
               </span>
             )}

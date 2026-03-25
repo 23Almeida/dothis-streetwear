@@ -21,11 +21,11 @@ export default function MarqueeBar() {
         rows: 3,
       }]}
     >
-      <div className="bg-white text-black py-3 overflow-hidden">
+      <div className="bg-neutral-950 border-y border-white/5 text-white py-3 overflow-hidden">
         <div className="flex animate-marquee whitespace-nowrap">
           {repeated.map((item, i) => (
-            <span key={i} className="text-xs font-black tracking-[0.3em] uppercase mx-8">
-              {item} <span className="mx-4 opacity-40">✦</span>
+            <span key={i} className="text-[10px] font-bold tracking-[0.35em] uppercase mx-8 text-neutral-300">
+              {item} <span className="mx-4 opacity-25 text-white">✦</span>
             </span>
           ))}
         </div>

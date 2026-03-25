@@ -50,7 +50,7 @@ export default function Header() {
         )}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <Link href="/" className="flex items-center">
               <Image
@@ -70,9 +70,9 @@ export default function Header() {
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    "text-xs font-medium tracking-widest uppercase transition-colors",
+                    "text-xs font-medium tracking-widest uppercase transition-colors relative py-1",
                     pathname === link.href
-                      ? "text-white"
+                      ? "text-white after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-white after:content-['']"
                       : "text-neutral-400 hover:text-white"
                   )}
                 >
@@ -104,7 +104,7 @@ export default function Header() {
                   <button className="p-2 text-neutral-400 hover:text-white transition-colors">
                     <User size={20} />
                   </button>
-                  <div className="absolute right-0 top-full mt-1 w-48 bg-neutral-900 border border-white/10 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-neutral-900/95 backdrop-blur-sm border border-white/10 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all shadow-xl shadow-black/50">
                     <Link
                       href="/account"
                       className="block px-4 py-2 text-sm text-neutral-300 hover:text-white hover:bg-white/5"
@@ -149,7 +149,7 @@ export default function Header() {
               >
                 <ShoppingBag size={20} />
                 {mounted && count > 0 && (
-                  <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-white text-black text-[10px] font-bold flex items-center justify-center">
+                  <span className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-white text-black text-[10px] font-bold flex items-center justify-center">
                     {count > 9 ? "9+" : count}
                   </span>
                 )}

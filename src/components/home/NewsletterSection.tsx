@@ -33,7 +33,7 @@ export default function NewsletterSection() {
           <p className="text-xs font-bold tracking-[0.4em] uppercase text-neutral-500 mb-4">
             {nl.subtitle}
           </p>
-          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white mb-4">
+          <h2 className="font-display text-5xl sm:text-6xl tracking-wide text-white mb-4 leading-none">
             {nl.title}
           </h2>
           <p className="text-neutral-400 text-sm mb-10 leading-relaxed">
