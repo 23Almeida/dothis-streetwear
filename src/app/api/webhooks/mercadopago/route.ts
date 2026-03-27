@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MercadoPagoConfig, Payment } from "mercadopago";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { sendOrderConfirmation } from "@/lib/email";
 
 const mp = new MercadoPagoConfig({
@@ -28,7 +28,18 @@ export async function POST(request: NextRequest) {
     if (payment.status === "approved") newStatus = "confirmed";
     else if (payment.status === "rejected" || payment.status === "cancelled") newStatus = "cancelled";
 
-    const supabase = await createClient();
+    const supabase = await createAdminClient();
+
+    // Check current order status to prevent duplicate processing
+    const { data: currentOrder } = await (supabase as any)
+      .from("orders")
+      .select("status, coupon_id, user_id")
+      .eq("id", orderId)
+      .single();
+
+    if (currentOrder?.status === "confirmed") {
+      return NextResponse.json({ ok: true }); // Already processed, idempotent
+    }
 
     // Update order status
     const { data: order } = await (supabase as any)
@@ -38,7 +49,7 @@ export async function POST(request: NextRequest) {
       .select("*, profile:profiles(full_name, email), items:order_items(*, product:products(name, stock, id))")
       .single();
 
-    // If approved: decrease stock + send email
+    // If approved: decrease stock + record coupon use + send email
     if (newStatus === "confirmed" && order) {
       const o = order as any;
 
@@ -51,7 +62,25 @@ export async function POST(request: NextRequest) {
           .eq("id", item.product?.id);
       }
 
-      // Send email
+      // Record coupon usage so it can't be reused
+      if (currentOrder?.coupon_id && currentOrder?.user_id) {
+        await (supabase as any)
+          .from("coupon_uses")
+          .insert({
+            coupon_id: currentOrder.coupon_id,
+            user_id: currentOrder.user_id,
+            order_id: orderId,
+          })
+          .onConflict("coupon_id,user_id")
+          .ignoreDuplicates();
+
+        // Increment coupon uses_count
+        await (supabase as any).rpc("increment_coupon_uses", {
+          p_coupon_id: currentOrder.coupon_id,
+        });
+      }
+
+      // Send confirmation email
       if (o.profile?.email) {
         await sendOrderConfirmation({
           customerEmail: o.profile.email,

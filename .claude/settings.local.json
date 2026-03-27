@@ -4,7 +4,8 @@
       "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-git --use-npm)",
       "Bash(npm run:*)",
       "Read(//c/Users/gabrielalmeida/.claude/projects/c--Users-gabrielalmeida-Downloads-dothis-streetwear-site/memory/**)",
-      "Bash(/c/Users/gabrielalmeida/Downloads/dothis-streetwear-site/supabase/migrations/004_marquee_hero_bg.sql:*)"
+      "Bash(/c/Users/gabrielalmeida/Downloads/dothis-streetwear-site/supabase/migrations/004_marquee_hero_bg.sql:*)",
+      "Bash(ls -la /c/Users/gabrielalmeida/Downloads/dothis-streetwear-site/.env*)"
     ]
   }
 }

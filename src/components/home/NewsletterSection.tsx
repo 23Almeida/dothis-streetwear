@@ -11,10 +11,26 @@ export default function NewsletterSection() {
   const nl = settings.newsletter;
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) setSubmitted(true);
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error();
+      setSubmitted(true);
+    } catch {
+      setError("Erro ao cadastrar. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,18 +64,21 @@ export default function NewsletterSection() {
               </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="flex gap-3 max-w-md mx-auto">
-              <Input
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="flex-1"
-              />
-              <Button type="submit" variant="primary">
-                {nl.buttonText}
-              </Button>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3 max-w-md mx-auto">
+              <div className="flex gap-3">
+                <Input
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="flex-1"
+                />
+                <Button type="submit" variant="primary" loading={loading}>
+                  {nl.buttonText}
+                </Button>
+              </div>
+              {error && <p className="text-red-500 text-xs text-center">{error}</p>}
             </form>
           )}
         </div>

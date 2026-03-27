@@ -41,14 +41,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
       (v) => v.size === selectedSize && (colors.length === 0 || v.color === selectedColor)
     );
 
-    for (let i = 0; i < quantity; i++) {
-      addItem(
-        product,
-        selectedSize,
-        selectedColor || "Único",
-        variant
-      );
-    }
+    addItem(product, selectedSize, selectedColor || "Único", variant, quantity);
 
     setError("");
   };

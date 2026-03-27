@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { defaultSettings, type SiteSettings } from "@/lib/settings";
+import { createClient } from "@/lib/supabase/client";
 
 interface SiteContextType {
   settings: SiteSettings;
@@ -42,14 +43,21 @@ export function SiteProvider({ children }: { children: ReactNode }) {
     // Optimistic update
     setSettings((s) => ({ ...s, [section]: { ...(s[section] as any), ...values } }));
     try {
+      // Get the current session token to send in the Authorization header
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
       const res = await fetch("/api/settings", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ [section]: values }),
       });
       const data = await res.json();
       if (!res.ok) {
-        // Revert on failure
         setSettings(prev);
         setSaving(false);
         return { ok: false, error: data?.error || `Erro ${res.status}` };

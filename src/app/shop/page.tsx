@@ -59,7 +59,15 @@ async function getProducts(params: {
     }
 
     const { data } = await query;
-    return (data as Product[]) || [];
+    let products = (data as Product[]) || [];
+
+    if (params.sizes && params.sizes.length > 0) {
+      products = products.filter((p) =>
+        p.variants?.some((v) => params.sizes!.includes(v.size))
+      );
+    }
+
+    return products;
   } catch {
     return [];
   }

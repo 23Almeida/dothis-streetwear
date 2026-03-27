@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { defaultSettings, type SiteSettings } from "@/lib/settings";
 
 const ALLOWED_KEYS: ReadonlySet<keyof SiteSettings> = new Set([
@@ -8,11 +8,9 @@ const ALLOWED_KEYS: ReadonlySet<keyof SiteSettings> = new Set([
 
 const MAX_VALUE_SIZE = 16 * 1024;
 
-// Rate limiter — cleans expired entries on each check to prevent unbounded growth
 const rateLimitMap = new Map<string, { count: number; reset: number }>();
 function checkRateLimit(ip: string, limit = 60): boolean {
   const now = Date.now();
-  // Purge expired entries to prevent memory leak
   for (const [key, val] of rateLimitMap) {
     if (val.reset < now) rateLimitMap.delete(key);
   }
@@ -46,12 +44,17 @@ function sanitizeValue(value: unknown): unknown {
 
 export async function GET() {
   try {
-    const supabase = await createClient();
-    const { data } = await (supabase as any)
+    const supabase = await createAdminClient();
+    const { data, error } = await (supabase as any)
       .from("site_settings")
       .select("key, value");
 
-    if (!data) return NextResponse.json(defaultSettings);
+    if (error) {
+      console.error("Settings GET error:", error.message);
+      return NextResponse.json(defaultSettings);
+    }
+
+    if (!data || data.length === 0) return NextResponse.json(defaultSettings);
 
     const settings: any = { ...defaultSettings };
     for (const row of data) {
@@ -60,9 +63,7 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json(settings, {
-      headers: { "Cache-Control": "s-maxage=30, stale-while-revalidate=60" },
-    });
+    return NextResponse.json(settings);
   } catch {
     return NextResponse.json(defaultSettings);
   }
@@ -74,11 +75,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Muitas requisições. Aguarde um momento." }, { status: 429 });
   }
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  // Accept token from Authorization header (client fetch) or cookie (SSR)
+  const authHeader = request.headers.get("Authorization");
+  const token = authHeader?.replace("Bearer ", "");
+
+  const adminClient = await createAdminClient();
+  let user = null;
+
+  if (token) {
+    const { data } = await adminClient.auth.getUser(token);
+    user = data.user;
+  } else {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  }
+
   if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  const { data: profile } = await (supabase as any)
+  const { data: profile } = await (adminClient as any)
     .from("profiles").select("role").eq("id", user.id).single();
   if (profile?.role !== "admin") {
     return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
@@ -95,7 +110,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
   }
 
-  // Batch upsert — single DB round trip instead of N sequential writes
   const rows = Object.entries(updates)
     .filter(([key]) => ALLOWED_KEYS.has(key as keyof SiteSettings))
     .map(([key, value]) => ({
@@ -105,9 +119,12 @@ export async function POST(request: NextRequest) {
     }));
 
   if (rows.length > 0) {
-    const { error } = await (supabase as any).from("site_settings").upsert(rows);
+    const { error } = await (adminClient as any)
+      .from("site_settings")
+      .upsert(rows, { onConflict: "key" });
+
     if (error) {
-      console.error("Settings upsert error:", error);
+      console.error("Settings upsert error:", error.message);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
   }

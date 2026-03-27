@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MercadoPagoConfig, Preference } from "mercadopago";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 
 const mp = new MercadoPagoConfig({
   accessToken: process.env.MP_ACCESS_TOKEN || "TEST-placeholder",
@@ -15,16 +15,20 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { items, address, subtotal, shipping, total } = body;
+  const { items, address, subtotal, shipping, discount = 0, total, couponId = null } = body;
 
-  // 1. Create order in DB
-  const { data: order, error: orderError } = await (supabase as any)
+  const adminClient = await createAdminClient();
+
+  // 1. Create order in DB with discount info
+  const { data: order, error: orderError } = await (adminClient as any)
     .from("orders")
     .insert({
       user_id: user.id,
       status: "pending",
       subtotal,
       shipping,
+      discount_amount: discount,
+      coupon_id: couponId,
       total,
       shipping_address: address,
     })
@@ -44,7 +48,7 @@ export async function POST(request: NextRequest) {
     color: item.color,
     price: item.product.price,
   }));
-  await (supabase as any).from("order_items").insert(orderItems);
+  await (adminClient as any).from("order_items").insert(orderItems);
 
   // 3. Build MP preference items
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -67,7 +71,21 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  // 4. Create MP Preference
+  // 4. Apply discount by reducing item prices proportionally
+  //    MP doesn't support negative prices, so we reduce items to match the final total
+  if (discount > 0) {
+    let remaining = Number(discount);
+    for (let i = 0; i < mpItems.length && remaining > 0; i++) {
+      const lineTotal = mpItems[i].unit_price * mpItems[i].quantity;
+      const reduction = Math.min(remaining, lineTotal);
+      mpItems[i].unit_price = Number(
+        ((lineTotal - reduction) / mpItems[i].quantity).toFixed(2)
+      );
+      remaining = Number((remaining - reduction).toFixed(2));
+    }
+  }
+
+  // 5. Create MP Preference
   const preference = new Preference(mp);
   try {
     const mpResponse = await preference.create({
@@ -92,8 +110,7 @@ export async function POST(request: NextRequest) {
       sandboxInitPoint: mpResponse.sandbox_init_point,
     });
   } catch (err: any) {
-    // If MP fails, delete the order and return error
-    await (supabase as any).from("orders").delete().eq("id", order.id);
+    await (adminClient as any).from("orders").delete().eq("id", order.id);
     return NextResponse.json({ error: "Erro ao criar pagamento: " + err.message }, { status: 500 });
   }
 }

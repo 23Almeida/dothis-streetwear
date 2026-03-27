@@ -7,7 +7,7 @@ interface CartStore {
   isOpen: boolean;
 
   // Actions
-  addItem: (product: Product, size: string, color: string, variant?: ProductVariant) => void;
+  addItem: (product: Product, size: string, color: string, variant?: ProductVariant, quantity?: number) => void;
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
@@ -26,7 +26,7 @@ export const useCartStore = create<CartStore>()(
       items: [],
       isOpen: false,
 
-      addItem: (product, size, color, variant) => {
+      addItem: (product, size, color, variant, quantity = 1) => {
         const items = get().items;
         const existingItem = items.find(
           (i) => i.product.id === product.id && i.size === size && i.color === color
@@ -36,7 +36,7 @@ export const useCartStore = create<CartStore>()(
           set({
             items: items.map((i) =>
               i.id === existingItem.id
-                ? { ...i, quantity: i.quantity + 1 }
+                ? { ...i, quantity: i.quantity + quantity }
                 : i
             ),
           });
@@ -45,7 +45,7 @@ export const useCartStore = create<CartStore>()(
             id: `${product.id}-${size}-${color}-${Date.now()}`,
             product,
             variant,
-            quantity: 1,
+            quantity,
             size,
             color,
           };

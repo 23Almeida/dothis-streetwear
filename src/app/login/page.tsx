@@ -91,7 +91,7 @@ export default function LoginPage() {
               Criar conta
             </Link>
           </p>
-          <Link href="#" className="text-xs text-neutral-600 hover:text-white transition-colors">
+          <Link href="/forgot-password" className="text-xs text-neutral-600 hover:text-white transition-colors">
             Esqueceu a senha?
           </Link>
         </div>
