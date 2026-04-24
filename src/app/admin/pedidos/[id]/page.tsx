@@ -4,8 +4,27 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/utils";
-import type { Address } from "@/types";
+import type { Address, OrderStatus } from "@/types";
 import StatusUpdater from "./StatusUpdater";
+
+interface OrderDetail {
+  id: string;
+  status: OrderStatus;
+  subtotal: number;
+  shipping: number;
+  total: number;
+  shipping_address: Address;
+  created_at: string;
+  profile: { full_name: string | null; email: string; phone: string | null } | null;
+  items: Array<{
+    id: string;
+    size: string;
+    color: string;
+    quantity: number;
+    price: number;
+    product: { name: string; images: string[]; slug: string } | null;
+  }>;
+}
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin — Detalhe do Pedido" };
@@ -21,8 +40,7 @@ export default async function AdminPedidoDetailPage({ params }: Props) {
   if (!user) redirect("/login");
 
   const { data: profileData } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  const profile = profileData as any;
-  if (profile?.role !== "admin") redirect("/");
+  if (profileData?.role !== "admin") redirect("/");
 
   const { data: order } = await supabase
     .from("orders")
@@ -32,8 +50,8 @@ export default async function AdminPedidoDetailPage({ params }: Props) {
 
   if (!order) notFound();
 
-  const o = order as any;
-  const address = o.shipping_address as Address;
+  const o = order as unknown as OrderDetail;
+  const address = o.shipping_address;
 
   const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
     pending:    { label: "Aguardando",   color: "text-yellow-400 bg-yellow-400/10" },
@@ -60,7 +78,7 @@ export default async function AdminPedidoDetailPage({ params }: Props) {
               Pedido #{id.slice(-8).toUpperCase()}
             </h1>
             <p className="text-neutral-500 text-sm mt-1">
-              {new Date(o.created_at).toLocaleDateString("pt-BR", {
+              {new Date(o.created_at).toLocaleString("pt-BR", {
                 day: "2-digit", month: "long", year: "numeric",
                 hour: "2-digit", minute: "2-digit"
               })}
@@ -82,7 +100,7 @@ export default async function AdminPedidoDetailPage({ params }: Props) {
                 Itens do Pedido
               </h2>
               <div className="flex flex-col gap-4">
-                {o.items?.map((item: any) => (
+                {o.items?.map((item) => (
                   <div key={item.id} className="flex gap-4 py-3 border-b border-white/5 last:border-0">
                     <div className="w-14 h-18 bg-neutral-900 relative overflow-hidden flex-shrink-0" style={{height: "4.5rem"}}>
                       {item.product?.images?.[0] && (

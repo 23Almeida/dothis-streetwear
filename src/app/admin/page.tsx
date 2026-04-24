@@ -19,9 +19,8 @@ export default async function AdminPage() {
     .select("role")
     .eq("id", user.id)
     .single();
-  const profile = profileData as any;
 
-  if (profile?.role !== "admin") redirect("/");
+  if (profileData?.role !== "admin") redirect("/");
 
   const [
     { count: productCount },
@@ -97,7 +96,7 @@ export default async function AdminPage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          {(recentOrders as any[])?.map((order: any) => (
+          {recentOrders?.map((order) => (
             <Link
               key={order.id}
               href={`/admin/pedidos/${order.id}`}

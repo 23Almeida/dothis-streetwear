@@ -3,11 +3,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Pencil } from "lucide-react";
 import type { Product } from "@/types";
 import { formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/store/cart";
 import Badge from "@/components/ui/Badge";
+import { useSiteContent } from "@/contexts/SiteContentContext";
+import ProductEditPanel from "@/components/admin/ProductEditPanel";
 
 interface ProductCardProps {
   product: Product;
@@ -16,7 +18,9 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [imageIdx, setImageIdx] = useState(0);
+  const [editOpen, setEditOpen] = useState(false);
   const { addItem } = useCartStore();
+  const { isAdmin, isEditMode } = useSiteContent();
 
   const isOnSale =
     product.compare_at_price && product.compare_at_price > product.price;
@@ -27,8 +31,9 @@ export default function ProductCard({ product }: ProductCardProps) {
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Quick add with first size (M default) — user can change on product page
-    addItem(product, "M", "Preto");
+    const defaultSize = product.variants?.[0]?.size ?? "M";
+    const defaultColor = product.variants?.[0]?.color ?? "Único";
+    addItem(product, defaultSize, defaultColor);
   };
 
   return (
@@ -79,7 +84,21 @@ export default function ProductCard({ product }: ProductCardProps) {
             + Adicionar ao Carrinho
           </button>
         )}
+
+        {/* Admin edit button */}
+        {isAdmin && isEditMode && (
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditOpen(true); }}
+            className="absolute top-2 left-2 z-20 flex items-center gap-1 bg-blue-600 text-white text-[10px] font-bold tracking-widest uppercase px-2 py-1 hover:bg-blue-500 transition-colors"
+          >
+            <Pencil size={9} /> Editar
+          </button>
+        )}
       </div>
+
+      {editOpen && (
+        <ProductEditPanel product={product} onClose={() => setEditOpen(false)} />
+      )}
 
       {/* Info */}
       <div className="pt-3 pb-1">

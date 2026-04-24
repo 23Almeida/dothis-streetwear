@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import ImageUploader from "./ImageUploader";
 import { Plus, X } from "lucide-react";
+import type { Product } from "@/types";
 
 interface Category {
   id: string;
@@ -25,7 +26,7 @@ interface Variant {
 
 interface ProductFormProps {
   categories: Category[];
-  product?: any;
+  product?: Product;
 }
 
 export default function ProductForm({ categories, product }: ProductFormProps) {
@@ -48,7 +49,7 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
 
   const [images, setImages] = useState<string[]>(product?.images || []);
   const [variants, setVariants] = useState<Variant[]>(
-    product?.variants?.map((v: any) => ({
+    product?.variants?.map((v) => ({
       id: v.id,
       size: v.size,
       color: v.color,
@@ -96,30 +97,28 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
       images,
     };
 
-    const db = supabase as any;
     let productId = product?.id;
 
     if (product) {
-      const { error } = await db.from("products").update(payload).eq("id", product.id);
+      const { error } = await supabase.from("products").update(payload).eq("id", product.id);
       if (error) { setError(error.message); setLoading(false); return; }
     } else {
-      const { data, error } = await db.from("products").insert(payload).select().single();
+      const { data, error } = await supabase.from("products").insert(payload).select().single();
       if (error || !data) { setError(error?.message || "Erro ao criar produto"); setLoading(false); return; }
       productId = data.id;
     }
 
     // Save variants
     if (productId && variants.length > 0) {
-      // Delete existing variants for this product and re-insert
-      await db.from("product_variants").delete().eq("product_id", productId);
+      await supabase.from("product_variants").delete().eq("product_id", productId);
       const variantsToInsert = variants.map((v) => ({
-        product_id: productId,
+        product_id: productId!,
         size: v.size,
         color: v.color || "Único",
         stock: v.stock,
         sku: v.sku || `${form.slug}-${v.size}-${v.color || "unico"}`.toLowerCase(),
       }));
-      await db.from("product_variants").insert(variantsToInsert);
+      await supabase.from("product_variants").insert(variantsToInsert);
     }
 
     router.push("/admin/produtos");

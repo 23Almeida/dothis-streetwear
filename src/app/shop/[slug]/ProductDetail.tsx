@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ShoppingBag, ChevronLeft, Minus, Plus } from "lucide-react";
+import { ShoppingBag, ChevronLeft, Minus, Plus, Pencil } from "lucide-react";
 import Link from "next/link";
 import type { Product } from "@/types";
 import { formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/store/cart";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
+import { useSiteContent } from "@/contexts/SiteContentContext";
+import ProductEditPanel from "@/components/admin/ProductEditPanel";
 
 interface ProductDetailProps {
   product: Product;
@@ -20,7 +22,9 @@ export default function ProductDetail({ product }: ProductDetailProps) {
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
   const [error, setError] = useState("");
+  const [editOpen, setEditOpen] = useState(false);
   const { addItem } = useCartStore();
+  const { isAdmin, isEditMode } = useSiteContent();
 
   const sizes = [...new Set(product.variants?.map((v) => v.size) || [])];
   const colors = [...new Set(product.variants?.map((v) => v.color) || [])];
@@ -126,9 +130,19 @@ export default function ProductDetail({ product }: ProductDetailProps) {
               </Link>
             )}
 
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white mb-4">
-              {product.name}
-            </h1>
+            <div className="flex items-start gap-3">
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white mb-4 flex-1">
+                {product.name}
+              </h1>
+              {isAdmin && isEditMode && (
+                <button
+                  onClick={() => setEditOpen(true)}
+                  className="flex items-center gap-1.5 bg-blue-600 text-white text-[10px] font-bold tracking-widest uppercase px-3 py-2 hover:bg-blue-500 transition-colors flex-shrink-0 mt-1"
+                >
+                  <Pencil size={11} /> Editar Produto
+                </button>
+              )}
+            </div>
 
             {/* Price */}
             <div className="flex items-center gap-3 mb-6">
@@ -268,6 +282,10 @@ export default function ProductDetail({ product }: ProductDetailProps) {
           </div>
         </div>
       </div>
+
+      {editOpen && (
+        <ProductEditPanel product={product} onClose={() => setEditOpen(false)} />
+      )}
     </div>
   );
 }

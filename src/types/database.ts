@@ -36,6 +36,7 @@ export interface Database {
           phone?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
       categories: {
         Row: {
@@ -60,6 +61,7 @@ export interface Database {
           description?: string | null;
           image?: string | null;
         };
+        Relationships: [];
       };
       products: {
         Row: {
@@ -105,6 +107,7 @@ export interface Database {
           stock?: number;
           updated_at?: string;
         };
+        Relationships: [];
       };
       product_variants: {
         Row: {
@@ -131,12 +134,13 @@ export interface Database {
           stock?: number;
           sku?: string;
         };
+        Relationships: [];
       };
       orders: {
         Row: {
           id: string;
           user_id: string;
-          status: string;
+          status: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
           subtotal: number;
           shipping: number;
           total: number;
@@ -147,7 +151,7 @@ export interface Database {
         Insert: {
           id?: string;
           user_id: string;
-          status?: string;
+          status?: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
           subtotal: number;
           shipping: number;
           total: number;
@@ -156,9 +160,10 @@ export interface Database {
           updated_at?: string;
         };
         Update: {
-          status?: string;
+          status?: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
           updated_at?: string;
         };
+        Relationships: [];
       };
       order_items: {
         Row: {
@@ -179,7 +184,86 @@ export interface Database {
           color: string;
           price: number;
         };
-        Update: Record<string, never>;
+        Update: {
+          quantity?: number;
+          price?: number;
+        };
+        Relationships: [];
+      };
+      coupons: {
+        Row: {
+          id: string;
+          code: string;
+          active: boolean;
+          expires_at: string | null;
+          max_uses: number | null;
+          used_count: number;
+          min_order: number;
+          first_purchase_only: boolean;
+          discount_type: "percent" | "fixed";
+          discount_value: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          active?: boolean;
+          expires_at?: string | null;
+          max_uses?: number | null;
+          used_count?: number;
+          min_order?: number;
+          first_purchase_only?: boolean;
+          discount_type: "percent" | "fixed";
+          discount_value: number;
+          created_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          expires_at?: string | null;
+          max_uses?: number | null;
+          used_count?: number;
+          min_order?: number;
+          first_purchase_only?: boolean;
+          discount_type?: "percent" | "fixed";
+          discount_value?: number;
+        };
+        Relationships: [];
+      };
+      coupon_uses: {
+        Row: {
+          id: string;
+          coupon_id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          coupon_id: string;
+          user_id: string;
+          created_at?: string;
+        };
+        Update: {
+          coupon_id?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      site_content: {
+        Row: {
+          key: string;
+          value: string;
+          updated_at: string;
+        };
+        Insert: {
+          key: string;
+          value: string;
+          updated_at?: string;
+        };
+        Update: {
+          value?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;

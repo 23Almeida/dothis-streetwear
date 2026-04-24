@@ -22,8 +22,7 @@ export default async function AdminPedidosPage() {
   if (!user) redirect("/login");
 
   const { data: profileData } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  const profile = profileData as any;
-  if (profile?.role !== "admin") redirect("/");
+  if (profileData?.role !== "admin") redirect("/");
 
   const { data: orders } = await supabase
     .from("orders")
@@ -53,7 +52,7 @@ export default async function AdminPedidosPage() {
             <span className="col-span-1 text-xs font-bold tracking-widest uppercase text-neutral-500 text-right">Ver</span>
           </div>
 
-          {(orders as any[])?.map((order: any) => {
+          {orders?.map((order) => {
             const status = STATUS_CONFIG[order.status] || { label: order.status, color: "text-neutral-400 bg-neutral-800" };
             return (
               <div key={order.id} className="grid grid-cols-12 gap-4 px-4 py-4 border-b border-white/5 hover:bg-white/2 items-center">

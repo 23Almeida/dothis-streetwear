@@ -4,6 +4,9 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import CartDrawer from "@/components/layout/CartDrawer";
+import EditModeBar from "@/components/admin/EditModeBar";
+import { SiteContentProvider } from "@/contexts/SiteContentContext";
+import { getSiteContent } from "@/lib/site-content";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -26,18 +29,23 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const siteContent = await getSiteContent();
+
   return (
     <html lang="pt-BR">
       <body className={`${inter.variable} font-sans bg-black text-white antialiased`}>
-        <Header />
-        <main className="min-h-screen">{children}</main>
-        <Footer />
-        <CartDrawer />
+        <SiteContentProvider initial={siteContent}>
+          <Header />
+          <main className="min-h-screen">{children}</main>
+          <Footer />
+          <CartDrawer />
+          <EditModeBar />
+        </SiteContentProvider>
       </body>
     </html>
   );

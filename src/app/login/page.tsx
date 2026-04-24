@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSupabase } from "@/hooks/useSupabase";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import type { Metadata } from "next";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -16,11 +15,11 @@ export default function LoginPage() {
   const supabase = useSupabase();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/account";
+  const redirect = searchParams.get("redirect") || "/";
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) router.replace("/account");
+      if (session) router.replace("/");
     });
   }, [supabase, router]);
 

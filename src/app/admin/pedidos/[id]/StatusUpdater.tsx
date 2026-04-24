@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSupabase } from "@/hooks/useSupabase";
 import Button from "@/components/ui/Button";
+import type { OrderStatus } from "@/types";
 
-const STATUS_OPTIONS = [
+const STATUS_OPTIONS: { value: OrderStatus; label: string }[] = [
   { value: "pending",    label: "Aguardando" },
   { value: "confirmed",  label: "Confirmado" },
   { value: "processing", label: "Em Separação" },
@@ -16,11 +17,11 @@ const STATUS_OPTIONS = [
 
 interface Props {
   orderId: string;
-  currentStatus: string;
+  currentStatus: OrderStatus;
 }
 
 export default function StatusUpdater({ orderId, currentStatus }: Props) {
-  const [status, setStatus] = useState(currentStatus);
+  const [status, setStatus] = useState<OrderStatus>(currentStatus);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const supabase = useSupabase();
@@ -29,7 +30,7 @@ export default function StatusUpdater({ orderId, currentStatus }: Props) {
   const handleSave = async () => {
     setLoading(true);
     setSaved(false);
-    await (supabase as any).from("orders").update({ status }).eq("id", orderId);
+    await supabase.from("orders").update({ status }).eq("id", orderId);
     setSaved(true);
     setLoading(false);
     router.refresh();
@@ -39,7 +40,7 @@ export default function StatusUpdater({ orderId, currentStatus }: Props) {
     <div className="flex flex-col gap-3">
       <select
         value={status}
-        onChange={(e) => { setStatus(e.target.value); setSaved(false); }}
+        onChange={(e) => { setStatus(e.target.value as OrderStatus); setSaved(false); }}
         className="w-full bg-neutral-900 border border-neutral-700 text-white px-4 py-3 text-sm focus:outline-none focus:border-white"
       >
         {STATUS_OPTIONS.map((opt) => (
@@ -50,7 +51,7 @@ export default function StatusUpdater({ orderId, currentStatus }: Props) {
       <Button
         onClick={handleSave}
         loading={loading}
-        disabled={status === currentStatus && !saved}
+        disabled={status === currentStatus || loading}
         fullWidth
         variant={saved ? "secondary" : "primary"}
       >

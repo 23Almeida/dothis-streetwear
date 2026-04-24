@@ -15,8 +15,7 @@ export default async function AdminProdutosPage() {
   if (!user) redirect("/login");
 
   const { data: profileData } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  const profile = profileData as any;
-  if (profile?.role !== "admin") redirect("/");
+  if (profileData?.role !== "admin") redirect("/");
 
   const { data: products } = await supabase
     .from("products")
@@ -55,7 +54,7 @@ export default async function AdminProdutosPage() {
           </div>
 
           {/* Rows */}
-          {(products as any[])?.map((product: any) => (
+          {products?.map((product) => (
             <div
               key={product.id}
               className="grid grid-cols-12 gap-4 px-4 py-4 border-b border-white/5 hover:bg-white/2 items-center"
@@ -65,7 +64,7 @@ export default async function AdminProdutosPage() {
                 <p className="text-xs text-neutral-600 font-mono mt-0.5">{product.slug}</p>
               </div>
               <div className="col-span-2">
-                <span className="text-xs text-neutral-400">{(product.category as any)?.name || "—"}</span>
+                <span className="text-xs text-neutral-400">{product.category?.name || "—"}</span>
               </div>
               <div className="col-span-2">
                 <p className="text-sm text-white font-bold">{formatPrice(product.price)}</p>

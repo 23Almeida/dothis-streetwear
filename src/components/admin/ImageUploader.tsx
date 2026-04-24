@@ -1,0 +1,154 @@
+"use client";
+
+import { useRef, useState } from "react";
+import Image from "next/image";
+import { useSupabase } from "@/hooks/useSupabase";
+import { Upload, X, Loader2, GripVertical } from "lucide-react";
+
+interface ImageUploaderProps {
+  images: string[];
+  onChange: (urls: string[]) => void;
+  bucket?: string;
+}
+
+export default function ImageUploader({ images, onChange, bucket = "products" }: ImageUploaderProps) {
+  const supabase = useSupabase();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+
+  const uploadFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    setError("");
+    const uploaded: string[] = [];
+
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith("image/")) continue;
+      if (file.size > 5 * 1024 * 1024) { setError(`${file.name} é muito grande (máx 5MB)`); continue; }
+
+      const ext = file.name.split(".").pop();
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(path, file, { cacheControl: "3600", upsert: false });
+
+      if (uploadError) { setError(`Erro: ${uploadError.message}`); continue; }
+
+      const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+      uploaded.push(data.publicUrl);
+    }
+
+    onChange([...images, ...uploaded]);
+    setUploading(false);
+  };
+
+  const remove = (url: string) => onChange(images.filter((i) => i !== url));
+  const moveUp = (i: number) => {
+    if (i === 0) return;
+    const next = [...images];
+    [next[i - 1], next[i]] = [next[i], next[i - 1]];
+    onChange(next);
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div
+        className="border-2 border-dashed border-neutral-700 hover:border-neutral-500 transition-colors cursor-pointer p-6 text-center"
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => { e.preventDefault(); uploadFiles(e.dataTransfer.files); }}
+      >
+        <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => uploadFiles(e.target.files)} />
+        {uploading ? (
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 size={20} className="text-neutral-400 animate-spin" />
+            <p className="text-xs text-neutral-500">Enviando...</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-1.5">
+            <Upload size={20} className="text-neutral-600" />
+            <p className="text-sm text-neutral-400">Clique ou arraste imagens</p>
+            <p className="text-xs text-neutral-600">PNG, JPG, WEBP — máx 5MB</p>
+          </div>
+        )}
+      </div>
+
+      {error && <p className="text-red-400 text-xs">{error}</p>}
+
+      {images.length > 0 && (
+        <div className="grid grid-cols-3 gap-2">
+          {images.map((url, i) => (
+            <div key={url} className={`relative group aspect-square bg-neutral-900 overflow-hidden border ${i === 0 ? "border-white/50" : "border-white/10"}`}>
+              <Image src={url} alt="" fill className="object-cover" />
+              {i === 0 && <span className="absolute top-1 left-1 bg-white text-black text-[9px] font-black px-1">Principal</span>}
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+                {i > 0 && (
+                  <button type="button" onClick={() => moveUp(i)} className="bg-white/20 hover:bg-white/40 text-white p-1.5">
+                    <GripVertical size={12} />
+                  </button>
+                )}
+                <button type="button" onClick={() => remove(url)} className="bg-red-500/80 hover:bg-red-500 text-white p-1.5">
+                  <X size={12} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Single image upload (for hero/banner) ───────────────────── */
+interface SingleImageUploadProps {
+  onUpload: (url: string) => void;
+  bucket?: string;
+  label?: string;
+}
+
+export function SingleImageUpload({ onUpload, bucket = "products", label = "Upload" }: SingleImageUploadProps) {
+  const supabase = useSupabase();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleFile = async (files: FileList | null) => {
+    const file = files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { setError("Arquivo inválido"); return; }
+    if (file.size > 10 * 1024 * 1024) { setError("Máximo 10MB"); return; }
+
+    setUploading(true);
+    setError("");
+    const ext = file.name.split(".").pop();
+    const path = `content/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(path, file, { cacheControl: "3600", upsert: false });
+
+    if (uploadError) { setError(uploadError.message); setUploading(false); return; }
+
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+    onUpload(data.publicUrl);
+    setUploading(false);
+  };
+
+  return (
+    <>
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e.target.files)} />
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        className="flex items-center gap-1.5 bg-white text-black text-[10px] font-bold tracking-widest uppercase px-3 py-1.5 hover:bg-neutral-200 transition-colors disabled:opacity-50"
+      >
+        {uploading ? <Loader2 size={10} className="animate-spin" /> : <Upload size={10} />}
+        {uploading ? "Enviando..." : label}
+      </button>
+      {error && <p className="text-red-400 text-[10px] mt-1">{error}</p>}
+    </>
+  );
+}

@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Instagram, Twitter, Youtube } from "lucide-react";
+import EditableText from "@/components/admin/EditableText";
+import { useSiteContent } from "@/contexts/SiteContentContext";
 
 const footerLinks = {
   shop: [
@@ -27,6 +31,9 @@ const footerLinks = {
 };
 
 export default function Footer() {
+  const { content } = useSiteContent();
+  const logoSrc = content["logo.src"] ?? "/Logo.png";
+
   return (
     <footer className="bg-neutral-950 border-t border-white/5 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
@@ -35,17 +42,19 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link href="/">
               <Image
-                src="/Logo.png"
+                src={logoSrc}
                 alt="DOTHIS"
                 width={100}
                 height={34}
                 className="object-contain"
               />
             </Link>
-            <p className="mt-4 text-sm text-neutral-500 leading-relaxed">
-              Streetwear nacional com identidade própria. Feito para quem tem
-              estilo, não segue regra.
-            </p>
+            <EditableText
+              contentKey="footer.description"
+              tag="p"
+              multiline
+              className="mt-4 text-sm text-neutral-500 leading-relaxed"
+            />
             <div className="flex gap-4 mt-6">
               <a
                 href="#"
