@@ -41,13 +41,14 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
     description: product?.description || "",
     price: product?.price || "",
     compare_at_price: product?.compare_at_price || "",
-    category_id: product?.category_id || (categories[0]?.id || ""),
+    category_id: product?.category_id || categories[0]?.id || "",
     stock: product?.stock || 0,
     is_active: product?.is_active ?? true,
     tags: product?.tags?.join(", ") || "",
   });
 
   const [images, setImages] = useState<string[]>(product?.images || []);
+
   const [variants, setVariants] = useState<Variant[]>(
     product?.variants?.map((v) => ({
       id: v.id,
@@ -57,20 +58,29 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
       sku: v.sku || "",
     })) || []
   );
-  const [newVariant, setNewVariant] = useState({ size: "", color: "", stock: 0, sku: "" });
+
+  const [newVariant, setNewVariant] = useState({
+    size: "",
+    color: "",
+    stock: 0,
+    sku: "",
+  });
 
   const handleChange = (field: string, value: any) => {
     setForm((prev) => {
       const updated = { ...prev, [field]: value };
+
       if (field === "name" && !product) {
         updated.slug = slugify(value);
       }
+
       return updated;
     });
   };
 
   const addVariant = () => {
     if (!newVariant.size) return;
+
     setVariants((prev) => [...prev, { ...newVariant }]);
     setNewVariant({ size: "", color: "", stock: 0, sku: "" });
   };
@@ -89,36 +99,64 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
       slug: form.slug,
       description: form.description,
       price: parseFloat(String(form.price)),
-      compare_at_price: form.compare_at_price ? parseFloat(String(form.compare_at_price)) : null,
+      compare_at_price: form.compare_at_price
+        ? parseFloat(String(form.compare_at_price))
+        : null,
       category_id: form.category_id,
       stock: parseInt(String(form.stock)),
       is_active: form.is_active,
-      tags: form.tags.split(",").map((t: string) => t.trim()).filter(Boolean),
+      tags: form.tags
+        .split(",")
+        .map((t: string) => t.trim())
+        .filter(Boolean),
       images,
     };
 
     let productId = product?.id;
 
     if (product) {
-      const { error } = await supabase.from("products").update(payload).eq("id", product.id);
-      if (error) { setError(error.message); setLoading(false); return; }
+      const { error } = await supabase
+        .from("products")
+        .update(payload)
+        .eq("id", product.id);
+
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
     } else {
-      const { data, error } = await supabase.from("products").insert(payload).select().single();
-      if (error || !data) { setError(error?.message || "Erro ao criar produto"); setLoading(false); return; }
-      productId = data.id;
+      const { data, error } = await supabase
+        .from("products")
+        .insert(payload)
+        .select()
+        .single();
+
+      if (error || !data) {
+        setError(error?.message || "Erro ao criar produto");
+        setLoading(false);
+        return;
+      }
+
+      productId = (data as any).id;
     }
 
-    // Save variants
-    if (productId && variants.length > 0) {
+    if (productId) {
       await supabase.from("product_variants").delete().eq("product_id", productId);
-      const variantsToInsert = variants.map((v) => ({
-        product_id: productId!,
-        size: v.size,
-        color: v.color || "Único",
-        stock: v.stock,
-        sku: v.sku || `${form.slug}-${v.size}-${v.color || "unico"}`.toLowerCase(),
-      }));
-      await supabase.from("product_variants").insert(variantsToInsert);
+
+      if (variants.length > 0) {
+        const variantsToInsert = variants.map((v) => ({
+          product_id: productId,
+          size: v.size,
+          color: v.color || "Único",
+          stock: v.stock,
+          sku:
+            v.sku ||
+            `${form.slug}-${v.size}-${v.color || "unico"}`.toLowerCase(),
+        }));
+
+        await supabase.from("product_variants").insert(variantsToInsert);
+      }
     }
 
     router.push("/admin/produtos");
@@ -127,8 +165,6 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-
-      {/* Nome + Slug */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input
           label="Nome do Produto"
@@ -137,6 +173,7 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
           onChange={(e) => handleChange("name", e.target.value)}
           required
         />
+
         <Input
           label="Slug (URL)"
           placeholder="camiseta-core-logo"
@@ -146,9 +183,11 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
         />
       </div>
 
-      {/* Descrição */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-neutral-400 uppercase tracking-widest">Descrição</label>
+        <label className="text-xs font-medium text-neutral-400 uppercase tracking-widest">
+          Descrição
+        </label>
+
         <textarea
           value={form.description}
           onChange={(e) => handleChange("description", e.target.value)}
@@ -159,7 +198,6 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
         />
       </div>
 
-      {/* Preços */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input
           label="Preço (R$)"
@@ -170,6 +208,7 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
           onChange={(e) => handleChange("price", e.target.value)}
           required
         />
+
         <Input
           label="Preço Original (opcional)"
           type="number"
@@ -180,10 +219,12 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
         />
       </div>
 
-      {/* Categoria + Estoque geral */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-neutral-400 uppercase tracking-widest">Categoria</label>
+          <label className="text-xs font-medium text-neutral-400 uppercase tracking-widest">
+            Categoria
+          </label>
+
           <select
             value={form.category_id}
             onChange={(e) => handleChange("category_id", e.target.value)}
@@ -191,10 +232,13 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
             required
           >
             {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
             ))}
           </select>
         </div>
+
         <Input
           label="Estoque geral"
           type="number"
@@ -205,7 +249,6 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
         />
       </div>
 
-      {/* Tags */}
       <Input
         label="Tags (separadas por vírgula)"
         placeholder="new, bestseller, sale, limited"
@@ -213,31 +256,47 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
         onChange={(e) => handleChange("tags", e.target.value)}
       />
 
-      {/* Imagens */}
       <ImageUploader images={images} onChange={setImages} />
 
-      {/* Variantes */}
       <div className="flex flex-col gap-3">
         <label className="text-xs font-medium text-neutral-400 uppercase tracking-widest">
           Variantes (Tamanho / Cor)
         </label>
 
-        {/* Existing variants */}
         {variants.length > 0 && (
           <div className="border border-white/10">
             <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-neutral-950 border-b border-white/10">
-              <span className="col-span-3 text-xs text-neutral-600 uppercase tracking-wider">Tamanho</span>
-              <span className="col-span-3 text-xs text-neutral-600 uppercase tracking-wider">Cor</span>
-              <span className="col-span-3 text-xs text-neutral-600 uppercase tracking-wider">Estoque</span>
-              <span className="col-span-2 text-xs text-neutral-600 uppercase tracking-wider">SKU</span>
-              <span className="col-span-1"></span>
+              <span className="col-span-3 text-xs text-neutral-600 uppercase tracking-wider">
+                Tamanho
+              </span>
+              <span className="col-span-3 text-xs text-neutral-600 uppercase tracking-wider">
+                Cor
+              </span>
+              <span className="col-span-3 text-xs text-neutral-600 uppercase tracking-wider">
+                Estoque
+              </span>
+              <span className="col-span-2 text-xs text-neutral-600 uppercase tracking-wider">
+                SKU
+              </span>
+              <span className="col-span-1" />
             </div>
+
             {variants.map((v, i) => (
-              <div key={i} className="grid grid-cols-12 gap-2 px-3 py-2 border-b border-white/5 items-center">
+              <div
+                key={`${v.size}-${v.color}-${i}`}
+                className="grid grid-cols-12 gap-2 px-3 py-2 border-b border-white/5 items-center"
+              >
                 <span className="col-span-3 text-sm text-white">{v.size}</span>
-                <span className="col-span-3 text-sm text-neutral-400">{v.color || "Único"}</span>
-                <span className="col-span-3 text-sm text-white">{v.stock}</span>
-                <span className="col-span-2 text-xs text-neutral-600 font-mono truncate">{v.sku}</span>
+                <span className="col-span-3 text-sm text-neutral-400">
+                  {v.color || "Único"}
+                </span>
+                <span className="col-span-3 text-sm text-white">
+                  {v.stock}
+                </span>
+                <span className="col-span-2 text-xs text-neutral-600 font-mono truncate">
+                  {v.sku}
+                </span>
+
                 <div className="col-span-1 flex justify-end">
                   <button
                     type="button"
@@ -252,34 +311,48 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
           </div>
         )}
 
-        {/* Add new variant */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Input
             label="Tamanho"
             placeholder="P, M, G, GG..."
             value={newVariant.size}
-            onChange={(e) => setNewVariant((p) => ({ ...p, size: e.target.value }))}
+            onChange={(e) =>
+              setNewVariant((p) => ({ ...p, size: e.target.value }))
+            }
           />
+
           <Input
             label="Cor (opcional)"
             placeholder="Preto, Branco..."
             value={newVariant.color}
-            onChange={(e) => setNewVariant((p) => ({ ...p, color: e.target.value }))}
+            onChange={(e) =>
+              setNewVariant((p) => ({ ...p, color: e.target.value }))
+            }
           />
+
           <Input
             label="Estoque"
             type="number"
             placeholder="10"
             value={newVariant.stock}
-            onChange={(e) => setNewVariant((p) => ({ ...p, stock: Number(e.target.value) }))}
+            onChange={(e) =>
+              setNewVariant((p) => ({
+                ...p,
+                stock: Number(e.target.value),
+              }))
+            }
           />
+
           <Input
             label="SKU (opcional)"
             placeholder="DOT-001-P"
             value={newVariant.sku}
-            onChange={(e) => setNewVariant((p) => ({ ...p, sku: e.target.value }))}
+            onChange={(e) =>
+              setNewVariant((p) => ({ ...p, sku: e.target.value }))
+            }
           />
         </div>
+
         <button
           type="button"
           onClick={addVariant}
@@ -290,7 +363,6 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
         </button>
       </div>
 
-      {/* Status */}
       <div className="flex items-center gap-3">
         <input
           type="checkbox"
@@ -299,6 +371,7 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
           onChange={(e) => handleChange("is_active", e.target.checked)}
           className="w-4 h-4 accent-white"
         />
+
         <label htmlFor="is_active" className="text-sm text-neutral-300">
           Produto ativo (visível na loja)
         </label>
@@ -310,6 +383,7 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
         <Button type="submit" loading={loading} size="lg">
           {product ? "Salvar Alterações" : "Criar Produto"}
         </Button>
+
         <Button
           type="button"
           variant="ghost"

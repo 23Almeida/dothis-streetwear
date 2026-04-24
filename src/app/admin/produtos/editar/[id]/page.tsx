@@ -38,7 +38,7 @@ export default async function EditarProdutoPage({ params }: Props) {
         </div>
         <ProductForm
           categories={(categories as any[]) || []}
-          product={productData}
+          product={productData as any}
         />
       </div>
     </div>

@@ -29,6 +29,7 @@ async function getProducts(params: {
 }): Promise<Product[]> {
   try {
     const supabase = await createClient();
+
     let query = supabase
       .from("products")
       .select("*, category:categories(*), variants:product_variants(*)")
@@ -40,7 +41,10 @@ async function getProducts(params: {
         .select("id")
         .eq("slug", params.category)
         .single();
-      if (cat) query = query.eq("category_id", (cat as any).id);
+
+      if (cat) {
+        query = query.eq("category_id", (cat as any).id);
+      }
     }
 
     if (params.search) {
@@ -59,7 +63,8 @@ async function getProducts(params: {
     }
 
     const { data } = await query;
-    return (data as Product[]) || [];
+
+    return (data ?? []) as Product[];
   } catch {
     return [];
   }
@@ -68,8 +73,13 @@ async function getProducts(params: {
 async function getCategories(): Promise<Category[]> {
   try {
     const supabase = await createClient();
-    const { data } = await supabase.from("categories").select("*").order("name");
-    return data || [];
+
+    const { data } = await supabase
+      .from("categories")
+      .select("*")
+      .order("name");
+
+    return (data ?? []) as Category[];
   } catch {
     return [];
   }
@@ -77,6 +87,7 @@ async function getCategories(): Promise<Category[]> {
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
   const params = await searchParams;
+
   const sizes = params.size
     ? Array.isArray(params.size)
       ? params.size
@@ -95,16 +106,15 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
 
   return (
     <div className="min-h-screen bg-black pt-16">
-      {/* Page Header */}
       <div className="border-b border-white/5 py-12 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           <p className="text-xs font-bold tracking-[0.4em] uppercase text-neutral-500 mb-2">
             Coleção
           </p>
+
           <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white">
             {params.category
-              ? categories.find((c) => c.slug === params.category)?.name ||
-                "Shop"
+              ? categories.find((c) => c.slug === params.category)?.name || "Shop"
               : "Shop"}
           </h1>
         </div>
@@ -112,20 +122,24 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
         <div className="flex gap-12">
-          {/* Filters Sidebar */}
           <aside className="w-56 flex-shrink-0 hidden lg:block">
             <Suspense fallback={null}>
-              <ShopFilters categories={categories} totalCount={products.length} />
+              <ShopFilters
+                categories={categories}
+                totalCount={products.length}
+              />
             </Suspense>
           </aside>
 
-          {/* Product Grid */}
           <div className="flex-1">
             <Suspense
               fallback={
                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                   {Array.from({ length: 8 }).map((_, i) => (
-                    <div key={i} className="aspect-[3/4] bg-neutral-900 animate-pulse" />
+                    <div
+                      key={i}
+                      className="aspect-[3/4] bg-neutral-900 animate-pulse"
+                    />
                   ))}
                 </div>
               }
