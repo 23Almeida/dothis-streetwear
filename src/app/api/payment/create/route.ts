@@ -18,18 +18,20 @@ export async function POST(request: NextRequest) {
   const { items, address, subtotal, shipping, discount = 0, total, couponId = null } = body;
 
   // 1. Create order in DB
+  const orderData: Record<string, any> = {
+    user_id: user.id,
+    status: "pending",
+    subtotal,
+    shipping,
+    total,
+    shipping_address: address,
+  };
+  if (discount > 0) orderData.discount = discount;
+  if (couponId) orderData.coupon_id = couponId;
+
   const { data: order, error: orderError } = await (supabase as any)
     .from("orders")
-    .insert({
-      user_id: user.id,
-      status: "pending",
-      subtotal,
-      shipping,
-      discount,
-      total,
-      coupon_id: couponId,
-      shipping_address: address,
-    })
+    .insert(orderData)
     .select()
     .single();
 

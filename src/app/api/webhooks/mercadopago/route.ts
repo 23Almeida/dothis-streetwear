@@ -58,14 +58,14 @@ export async function POST(request: NextRequest) {
 
         const { data: coupon } = await (supabase as any)
           .from("coupons")
-          .select("used_count")
+          .select("uses_count")
           .eq("id", o.coupon_id)
           .single();
 
         if (coupon) {
           await (supabase as any)
             .from("coupons")
-            .update({ used_count: (coupon.used_count || 0) + 1 })
+            .update({ uses_count: (coupon.uses_count || 0) + 1 })
             .eq("id", o.coupon_id);
         }
       }
