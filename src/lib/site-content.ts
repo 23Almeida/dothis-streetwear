@@ -1,5 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
-
 export const DEFAULT_CONTENT: Record<string, string> = {
   "hero.badge": "Nova Coleção — Drop 2026",
   "hero.subtitle": "Streetwear nacional com identidade própria. Cada peça é uma declaração.",
@@ -40,12 +38,15 @@ export const DEFAULT_CONTENT: Record<string, string> = {
   ]),
 };
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const CONTENT_FILE_URL = `${SUPABASE_URL}/storage/v1/object/public/products/_site-content.json`;
+
 export async function getSiteContent(): Promise<Record<string, string>> {
   try {
-    const supabase = await createClient();
-    const { data } = await supabase.from("site_content").select("key, value");
-    const rows = (data ?? []) as { key: string; value: string }[];
-    const overrides = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+    const url = `${CONTENT_FILE_URL}?t=${Date.now()}`;
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return { ...DEFAULT_CONTENT };
+    const overrides: Record<string, string> = await res.json();
     return { ...DEFAULT_CONTENT, ...overrides };
   } catch {
     return { ...DEFAULT_CONTENT };

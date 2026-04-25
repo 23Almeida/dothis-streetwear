@@ -7,6 +7,7 @@ import CartDrawer from "@/components/layout/CartDrawer";
 import EditModeBar from "@/components/admin/EditModeBar";
 import { SiteContentProvider } from "@/contexts/SiteContentContext";
 import { getSiteContent } from "@/lib/site-content";
+import { createClient } from "@/lib/supabase/server";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -34,12 +35,29 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const siteContent = await getSiteContent();
+  const [siteContent, isAdmin] = await Promise.all([
+    getSiteContent(),
+    (async () => {
+      try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return false;
+        const { data } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+        return (data as { role: string } | null)?.role === "admin";
+      } catch {
+        return false;
+      }
+    })(),
+  ]);
 
   return (
     <html lang="pt-BR">
       <body className={`${inter.variable} font-sans bg-black text-white antialiased`}>
-        <SiteContentProvider initial={siteContent}>
+        <SiteContentProvider initial={siteContent} initialIsAdmin={isAdmin}>
           <Header />
           <main className="min-h-screen">{children}</main>
           <Footer />

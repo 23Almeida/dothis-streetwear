@@ -31,11 +31,14 @@ export default function Header() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [editNavOpen, setEditNavOpen] = useState(false);
   const [draftLinks, setDraftLinks] = useState<NavLink[]>([]);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const { toggleCart, totalItems } = useCartStore();
   const { profile, signOut } = useAuth();
   const { isAdmin, isEditMode, content, updateContent } = useSiteContent();
   const count = totalItems();
+
+  useEffect(() => { setMounted(true); }, []);
 
   const navLinks = parseNavLinks(content["nav.links"]);
 
@@ -91,6 +94,7 @@ export default function Header() {
                 width={120}
                 height={40}
                 className="object-contain"
+                style={{ width: "auto", height: "40px" }}
                 priority
               />
             </Link>
@@ -190,7 +194,7 @@ export default function Header() {
                 className="p-2 text-neutral-400 hover:text-white transition-colors relative"
               >
                 <ShoppingBag size={20} />
-                {count > 0 && (
+                {mounted && count > 0 && (
                   <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-white text-black text-[10px] font-bold flex items-center justify-center">
                     {count > 9 ? "9+" : count}
                   </span>

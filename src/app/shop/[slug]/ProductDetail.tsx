@@ -85,7 +85,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                         : "border-transparent opacity-50 hover:opacity-100"
                     }`}
                   >
-                    <Image src={img} alt="" fill className="object-cover" />
+                    <Image src={img} alt="" fill sizes="64px" className="object-cover" />
                   </button>
                 ))}
               </div>

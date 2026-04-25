@@ -7,7 +7,6 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import { useAuth } from "@/hooks/useAuth";
 
 interface SiteContentContextType {
   content: Record<string, string>;
@@ -21,12 +20,14 @@ const SiteContentContext = createContext<SiteContentContextType | null>(null);
 
 export function SiteContentProvider({
   initial,
+  initialIsAdmin,
   children,
 }: {
   initial: Record<string, string>;
+  initialIsAdmin: boolean;
   children: ReactNode;
 }) {
-  const { isAdmin } = useAuth();
+  const isAdmin = initialIsAdmin;
   const [content, setContent] = useState<Record<string, string>>(initial);
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -35,11 +36,15 @@ export function SiteContentProvider({
   const updateContent = useCallback(async (key: string, value: string) => {
     setContent((prev) => ({ ...prev, [key]: value }));
     try {
-      await fetch("/api/site-content", {
+      const res = await fetch("/api/site-content", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key, value }),
       });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        console.error("site-content save failed", res.status, body);
+      }
     } catch (err) {
       console.error("Failed to save content:", err);
     }

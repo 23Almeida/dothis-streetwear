@@ -58,6 +58,7 @@ export default function EditableText({
         setDraft(e.target.value),
       onBlur: save,
       onKeyDown,
+      onClick: (e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); },
       className: `${className} bg-black/30 border border-blue-400 outline-none px-1`,
     };
     return multiline ? (
@@ -71,7 +72,11 @@ export default function EditableText({
   return (
     <Tag
       className={`${className} relative group cursor-pointer`}
-      onClick={() => setEditing(true)}
+      onClick={(e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setEditing(true);
+      }}
     >
       {value || <span className="opacity-30 italic">clique para editar</span>}
       <span className="absolute -top-6 left-0 hidden group-hover:flex items-center gap-1 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 z-50 whitespace-nowrap pointer-events-none">
