@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { items, address, subtotal, shipping, total } = body;
+  const { items, address, subtotal, shipping, discount = 0, total, couponId = null } = body;
 
   // 1. Create order in DB
   const { data: order, error: orderError } = await (supabase as any)
@@ -25,7 +25,9 @@ export async function POST(request: NextRequest) {
       status: "pending",
       subtotal,
       shipping,
+      discount,
       total,
+      coupon_id: couponId,
       shipping_address: address,
     })
     .select()
@@ -67,6 +69,17 @@ export async function POST(request: NextRequest) {
     });
   }
 
+  // Desconto como item negativo no MP
+  if (discount > 0) {
+    mpItems.push({
+      id: "desconto",
+      title: "Desconto (cupom)",
+      quantity: 1,
+      unit_price: -Number(discount),
+      currency_id: "BRL",
+    });
+  }
+
   // 4. Create MP Preference
   const preference = new Preference(mp);
   try {
@@ -92,7 +105,6 @@ export async function POST(request: NextRequest) {
       sandboxInitPoint: mpResponse.sandbox_init_point,
     });
   } catch (err: any) {
-    // If MP fails, delete the order and return error
     await (supabase as any).from("orders").delete().eq("id", order.id);
     return NextResponse.json({ error: "Erro ao criar pagamento: " + err.message }, { status: 500 });
   }

@@ -10,8 +10,6 @@ import Button from "@/components/ui/Button";
 export default function CartPage() {
   const { items, removeItem, updateQuantity, subtotal } = useCartStore();
   const sub = subtotal();
-  const shipping = sub > 299 ? 0 : 29.9;
-  const total = sub + shipping;
 
   if (items.length === 0) {
     return (
@@ -118,23 +116,15 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-400">Frete</span>
-                  <span>
-                    {shipping === 0 ? (
-                      <span className="text-green-400">Grátis</span>
-                    ) : (
-                      formatPrice(shipping)
-                    )}
-                  </span>
+                  <span className="text-neutral-500 text-xs">Calculado no checkout</span>
                 </div>
-                {shipping > 0 && (
-                  <p className="text-xs text-neutral-600">
-                    Frete grátis acima de {formatPrice(299)}
-                  </p>
-                )}
+                <p className="text-xs text-neutral-600">
+                  Frete grátis para compras acima de {formatPrice(299)}
+                </p>
                 <hr className="border-white/10 my-2" />
                 <div className="flex justify-between font-bold text-base">
-                  <span>Total</span>
-                  <span>{formatPrice(total)}</span>
+                  <span>Total estimado</span>
+                  <span>{formatPrice(sub)}</span>
                 </div>
               </div>
 

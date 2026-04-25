@@ -70,7 +70,9 @@ export default function CheckoutPage() {
     try {
       const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await res.json();
-      if (!data.erro) {
+      if (data.erro) {
+        setError("CEP não encontrado. Preencha o endereço manualmente.");
+      } else {
         setAddress((prev) => ({
           ...prev,
           street: data.logradouro || prev.street,
@@ -79,7 +81,9 @@ export default function CheckoutPage() {
           state: data.uf || prev.state,
         }));
       }
-    } catch {}
+    } catch {
+      setError("Erro ao buscar CEP. Preencha o endereço manualmente.");
+    }
     setCepLoading(false);
   };
 
@@ -144,7 +148,6 @@ export default function CheckoutPage() {
         return;
       }
 
-      clearCart();
       const isSandbox = process.env.NEXT_PUBLIC_MP_SANDBOX === "true";
       window.location.href = isSandbox ? data.sandboxInitPoint : data.initPoint;
     } catch {

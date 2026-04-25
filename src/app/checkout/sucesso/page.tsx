@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CheckCircle } from "lucide-react";
 import Button from "@/components/ui/Button";
+import CartClearer from "@/components/checkout/CartClearer";
 
 export const metadata = { title: "Pedido Confirmado — DOTHIS" };
 
@@ -14,6 +15,7 @@ export default async function CheckoutSucessoPage({ searchParams }: Props) {
 
   return (
     <div className="min-h-screen bg-black pt-16 flex items-center justify-center px-4">
+      <CartClearer />
       <div className="text-center max-w-md">
         <div className="flex justify-center mb-6">
           <CheckCircle size={64} className="text-green-400" />
