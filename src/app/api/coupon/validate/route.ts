@@ -23,17 +23,18 @@ export async function POST(request: NextRequest) {
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
-  const { data: coupon, error: couponError } = await adminClient
-    .from("coupons")
-    .select("*")
-    .eq("code", code.toUpperCase().trim())
-    .maybeSingle();
+  // Usa REST direto com service role para bypassar qualquer filtro do JS client
+  const restUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/coupons?code=eq.${encodeURIComponent(code.toUpperCase().trim())}&select=*`;
+  const restRes = await fetch(restUrl, {
+    headers: {
+      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+    },
+  });
+  const rows = await restRes.json();
+  const coupon = Array.isArray(rows) ? rows[0] ?? null : null;
 
-  console.log("[coupon/validate] code:", code.toUpperCase().trim());
-  console.log("[coupon/validate] result:", coupon);
-  console.log("[coupon/validate] error:", couponError);
-
-  if (!coupon || coupon.is_active === false) {
+  if (!coupon || !coupon.is_active) {
     return NextResponse.json({ error: "Cupom não encontrado ou inativo" }, { status: 404 });
   }
 
