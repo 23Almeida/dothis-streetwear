@@ -112,7 +112,7 @@ export function EditBgButton({ contentKey, label = "Trocar Imagem" }: EditBgButt
   return (
     <>
       {/* Trigger button */}
-      <div className="absolute top-4 right-4 z-30">
+      <div className="absolute top-20 right-4 z-30">
         <button
           onClick={() => { setUrlDraft(content[contentKey] ?? ""); setOpen(true); }}
           className="flex items-center gap-1.5 bg-black/70 hover:bg-black text-white text-[10px] font-bold tracking-widest uppercase px-3 py-1.5 border border-white/30 transition-colors"

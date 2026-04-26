@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/utils";
 import { Package, ShoppingBag, Users, TrendingUp } from "lucide-react";
+import HeroEditor from "@/components/admin/HeroEditor";
+import { getSiteContent } from "@/lib/site-content";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin — Dashboard" };
@@ -27,6 +29,7 @@ export default async function AdminPage() {
     { count: orderCount },
     { count: userCount },
     { data: recentOrders },
+    siteContent,
   ] = await Promise.all([
     supabase.from("products").select("*", { count: "exact", head: true }),
     supabase.from("orders").select("*", { count: "exact", head: true }),
@@ -36,6 +39,7 @@ export default async function AdminPage() {
       .select("id, status, total, created_at")
       .order("created_at", { ascending: false })
       .limit(8),
+    getSiteContent(),
   ]);
 
   const STATUS_COLORS: Record<string, string> = {
@@ -85,6 +89,11 @@ export default async function AdminPage() {
               </div>
             </Link>
           ))}
+        </div>
+
+        {/* Hero Image */}
+        <div className="mb-12">
+          <HeroEditor currentImage={siteContent["hero.bg_image"]} />
         </div>
 
         {/* Recent Orders */}
