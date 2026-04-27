@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { LayoutDashboard, Package, ShoppingBag, Users, ExternalLink } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Tag, ExternalLink } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +9,7 @@ const navLinks = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/produtos", label: "Produtos", icon: Package },
   { href: "/admin/pedidos", label: "Pedidos", icon: ShoppingBag },
+  { href: "/admin/categorias", label: "Categorias", icon: Tag },
 ];
 
 export default async function AdminLayout({
