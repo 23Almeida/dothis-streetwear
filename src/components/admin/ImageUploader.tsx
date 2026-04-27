@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { normalizeImageUrl } from "@/lib/utils";
 import { Upload, X, Loader2, GripVertical, Link as LinkIcon, Plus } from "lucide-react";
 
 interface ImageUploaderProps {
@@ -43,21 +44,11 @@ export default function ImageUploader({ images, onChange }: ImageUploaderProps) 
     setUploading(false);
   };
 
-  const normalizeUrl = (raw: string): string => {
-    // Google Drive: /file/d/ID/view → direct image URL
-    const driveMatch = raw.match(/drive\.google\.com\/file\/d\/([^/?]+)/);
-    if (driveMatch) return `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
-    // Google Drive: open?id=ID
-    const driveOpen = raw.match(/drive\.google\.com\/open\?id=([^&]+)/);
-    if (driveOpen) return `https://drive.google.com/uc?export=view&id=${driveOpen[1]}`;
-    return raw;
-  };
-
   const addUrl = () => {
     const raw = urlInput.trim();
     if (!raw) return;
     if (!raw.startsWith("http")) { setError("URL inválida"); return; }
-    onChange([...images, normalizeUrl(raw)]);
+    onChange([...images, normalizeImageUrl(raw)]);
     setUrlInput("");
     setError("");
   };

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSupabase } from "@/hooks/useSupabase";
 import { slugify } from "@/lib/utils";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -30,10 +29,10 @@ interface ProductFormProps {
 }
 
 export default function ProductForm({ categories, product }: ProductFormProps) {
-  const supabase = useSupabase();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
 
   const [form, setForm] = useState({
     name: product?.name || "",
@@ -94,73 +93,39 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
     setLoading(true);
     setError("");
 
-    const payload = {
-      name: form.name,
-      slug: form.slug,
-      description: form.description,
-      price: parseFloat(String(form.price)),
-      compare_at_price: form.compare_at_price
-        ? parseFloat(String(form.compare_at_price))
-        : null,
-      category_id: form.category_id,
-      stock: parseInt(String(form.stock)),
-      is_active: form.is_active,
-      tags: form.tags
-        .split(",")
-        .map((t: string) => t.trim())
-        .filter(Boolean),
-      images,
-    };
+    try {
+      const res = await fetch("/api/products/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: product?.id,
+          name: form.name,
+          slug: form.slug,
+          description: form.description,
+          price: parseFloat(String(form.price)),
+          compare_at_price: form.compare_at_price ? parseFloat(String(form.compare_at_price)) : null,
+          category_id: form.category_id,
+          stock: parseInt(String(form.stock)),
+          is_active: form.is_active,
+          tags: form.tags.split(",").map((t: string) => t.trim()).filter(Boolean),
+          images,
+          variants,
+        }),
+      });
 
-    let productId = product?.id;
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || "Erro ao salvar"); return; }
 
-    if (product) {
-      const { error } = await supabase
-        .from("products")
-        .update(payload)
-        .eq("id", product.id);
-
-      if (error) {
-        setError(error.message);
-        setLoading(false);
-        return;
-      }
-    } else {
-      const { data, error } = await supabase
-        .from("products")
-        .insert(payload)
-        .select()
-        .single();
-
-      if (error || !data) {
-        setError(error?.message || "Erro ao criar produto");
-        setLoading(false);
-        return;
-      }
-
-      productId = (data as any).id;
+      setSaved(true);
+      setTimeout(() => {
+        router.push("/admin/produtos");
+        router.refresh();
+      }, 1200);
+    } catch (err: any) {
+      setError(err?.message ?? "Erro ao salvar");
+    } finally {
+      setLoading(false);
     }
-
-    if (productId) {
-      await supabase.from("product_variants").delete().eq("product_id", productId);
-
-      if (variants.length > 0) {
-        const variantsToInsert = variants.map((v) => ({
-          product_id: productId,
-          size: v.size,
-          color: v.color || "Único",
-          stock: v.stock,
-          sku:
-            v.sku ||
-            `${form.slug}-${v.size}-${v.color || "unico"}`.toLowerCase(),
-        }));
-
-        await supabase.from("product_variants").insert(variantsToInsert);
-      }
-    }
-
-    router.push("/admin/produtos");
-    router.refresh();
   };
 
   return (
@@ -381,7 +346,7 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
 
       <div className="flex gap-3 pt-4 border-t border-white/10">
         <Button type="submit" loading={loading} size="lg">
-          {product ? "Salvar Alterações" : "Criar Produto"}
+          {saved ? "Salvo! Redirecionando..." : product ? "Salvar Alterações" : "Criar Produto"}
         </Button>
 
         <Button

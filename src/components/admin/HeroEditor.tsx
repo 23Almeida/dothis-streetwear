@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { SingleImageUpload } from "@/components/admin/ImageUploader";
 import { Check, ImageIcon, X } from "lucide-react";
+import { normalizeImageUrl } from "@/lib/utils";
 
 interface HeroEditorProps {
   currentImage: string;
@@ -31,7 +32,7 @@ export default function HeroEditor({ currentImage }: HeroEditorProps) {
   };
 
   const handleUrl = () => {
-    if (urlInput.trim()) { save(urlInput.trim()); setUrlInput(""); }
+    if (urlInput.trim()) { save(normalizeImageUrl(urlInput.trim())); setUrlInput(""); }
   };
 
   return (

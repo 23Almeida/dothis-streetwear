@@ -21,7 +21,7 @@ export default async function EditarProdutoPage({ params }: Props) {
   if (profile?.role !== "admin") redirect("/");
 
   const [{ data: productData }, { data: categories }] = await Promise.all([
-    supabase.from("products").select("*").eq("id", id).single(),
+    supabase.from("products").select("*, variants:product_variants(*)").eq("id", id).single(),
     supabase.from("categories").select("id, name").order("name"),
   ]);
 

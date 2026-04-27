@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ImageIcon, X, Check, Upload } from "lucide-react";
 import { useSiteContent } from "@/contexts/SiteContentContext";
 import { SingleImageUpload } from "@/components/admin/ImageUploader";
+import { normalizeImageUrl } from "@/lib/utils";
 
 /* ── next/image wrapper ─────────────────────────────────────────────── */
 
@@ -106,7 +107,7 @@ export function EditBgButton({ contentKey, label = "Trocar Imagem" }: EditBgButt
   if (!isAdmin || !isEditMode) return null;
 
   const saveUrl = () => {
-    if (urlDraft.trim()) { updateContent(contentKey, urlDraft.trim()); setOpen(false); }
+    if (urlDraft.trim()) { updateContent(contentKey, normalizeImageUrl(urlDraft.trim())); setOpen(false); }
   };
 
   return (
