@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useSupabase } from "@/hooks/useSupabase";
 import { Upload, X, Loader2, GripVertical, Link as LinkIcon, Plus } from "lucide-react";
 
 interface ImageUploaderProps {
@@ -10,8 +9,7 @@ interface ImageUploaderProps {
   bucket?: string;
 }
 
-export default function ImageUploader({ images, onChange, bucket = "products" }: ImageUploaderProps) {
-  const supabase = useSupabase();
+export default function ImageUploader({ images, onChange }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -26,19 +24,19 @@ export default function ImageUploader({ images, onChange, bucket = "products" }:
 
     for (const file of Array.from(files)) {
       if (!file.type.startsWith("image/")) continue;
-      if (file.size > 5 * 1024 * 1024) { setError(`${file.name} é muito grande (máx 5MB)`); continue; }
+      if (file.size > 10 * 1024 * 1024) { setError(`${file.name} é muito grande (máx 10MB)`); continue; }
 
-      const ext = file.name.split(".").pop();
-      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const form = new FormData();
+      form.append("file", file);
 
-      const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(path, file, { cacheControl: "3600", upsert: false });
-
-      if (uploadError) { setError(`Erro: ${uploadError.message}`); continue; }
-
-      const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-      uploaded.push(data.publicUrl);
+      try {
+        const res = await fetch("/api/upload", { method: "POST", body: form });
+        const data = await res.json();
+        if (!res.ok) { setError(data.error || "Erro no upload"); continue; }
+        uploaded.push(data.url);
+      } catch {
+        setError("Erro de conexão no upload");
+      }
     }
 
     onChange([...images, ...uploaded]);

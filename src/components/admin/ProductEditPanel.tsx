@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { X, Save, Loader2, ExternalLink } from "lucide-react";
-import { useSupabase } from "@/hooks/useSupabase";
 import type { Product } from "@/types";
 import ImageUploader from "@/components/admin/ImageUploader";
 
@@ -13,7 +12,6 @@ interface ProductEditPanelProps {
 }
 
 export default function ProductEditPanel({ product, onClose }: ProductEditPanelProps) {
-  const supabase = useSupabase();
   const router = useRouter();
 
   const [images, setImages] = useState<string[]>(product.images ?? []);
@@ -40,19 +38,25 @@ export default function ProductEditPanel({ product, onClose }: ProductEditPanelP
     setSaved(false);
 
     try {
-      const { error: dbError } = await supabase.from("products").update({
-        name: name.trim(),
-        price: parseFloat(price) || product.price,
-        compare_at_price: compareAt ? parseFloat(compareAt) : null,
-        description: description.trim(),
-        tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
-        images,
-        is_active: isActive,
-        updated_at: new Date().toISOString(),
-      }).eq("id", product.id);
+      const res = await fetch("/api/products/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: product.id,
+          name: name.trim(),
+          price: parseFloat(price) || product.price,
+          compare_at_price: compareAt ? parseFloat(compareAt) : null,
+          description: description.trim(),
+          tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
+          images,
+          is_active: isActive,
+          updated_at: new Date().toISOString(),
+        }),
+      });
+      const data = await res.json();
 
-      if (dbError) {
-        setError(dbError.message);
+      if (!res.ok) {
+        setError(data.error || "Erro ao salvar");
         return;
       }
 
