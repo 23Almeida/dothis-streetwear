@@ -39,27 +39,31 @@ export default function ProductEditPanel({ product, onClose }: ProductEditPanelP
     setError("");
     setSaved(false);
 
-    const { error: dbError } = await supabase.from("products").update({
-      name: name.trim(),
-      price: parseFloat(price) || product.price,
-      compare_at_price: compareAt ? parseFloat(compareAt) : null,
-      description: description.trim(),
-      tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
-      images,
-      is_active: isActive,
-      updated_at: new Date().toISOString(),
-    }).eq("id", product.id);
+    try {
+      const { error: dbError } = await supabase.from("products").update({
+        name: name.trim(),
+        price: parseFloat(price) || product.price,
+        compare_at_price: compareAt ? parseFloat(compareAt) : null,
+        description: description.trim(),
+        tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
+        images,
+        is_active: isActive,
+        updated_at: new Date().toISOString(),
+      }).eq("id", product.id);
 
-    if (dbError) {
-      setError(dbError.message);
+      if (dbError) {
+        setError(dbError.message);
+        return;
+      }
+
+      setSaved(true);
+      router.refresh();
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err: any) {
+      setError(err?.message ?? "Erro ao salvar");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setSaved(true);
-    setLoading(false);
-    router.refresh();
-    setTimeout(() => setSaved(false), 2000);
   };
 
   return (
