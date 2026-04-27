@@ -169,8 +169,7 @@ interface SingleImageUploadProps {
   label?: string;
 }
 
-export function SingleImageUpload({ onUpload, bucket = "products", label = "Upload" }: SingleImageUploadProps) {
-  const supabase = useSupabase();
+export function SingleImageUpload({ onUpload, label = "Upload" }: SingleImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -183,18 +182,19 @@ export function SingleImageUpload({ onUpload, bucket = "products", label = "Uplo
 
     setUploading(true);
     setError("");
-    const ext = file.name.split(".").pop();
-    const path = `content/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from(bucket)
-      .upload(path, file, { cacheControl: "3600", upsert: false });
-
-    if (uploadError) { setError(uploadError.message); setUploading(false); return; }
-
-    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-    onUpload(data.publicUrl);
-    setUploading(false);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || "Erro no upload"); return; }
+      onUpload(data.url);
+    } catch {
+      setError("Erro de conexão");
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
