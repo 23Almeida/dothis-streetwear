@@ -7,14 +7,6 @@ import EditableText from "@/components/admin/EditableText";
 import { useSiteContent } from "@/contexts/SiteContentContext";
 
 const footerLinks = {
-  shop: [
-    { href: "/shop", label: "Todos os Produtos" },
-    { href: "/shop?category=camisetas", label: "Camisetas" },
-    { href: "/shop?category=moletons", label: "Moletons" },
-    { href: "/shop?category=calcas", label: "Calças" },
-    { href: "/shop?category=jaquetas", label: "Jaquetas" },
-    { href: "/shop?category=acessorios", label: "Acessórios" },
-  ],
   info: [
     { href: "/sobre", label: "Sobre a Marca" },
     { href: "/contato", label: "Contato" },
@@ -31,7 +23,7 @@ const footerLinks = {
 };
 
 export default function Footer() {
-  const { content } = useSiteContent();
+  const { content, categories } = useSiteContent();
   const logoSrc = content["logo.src"] ?? "/Logo.png";
 
   return (
@@ -86,13 +78,18 @@ export default function Footer() {
               Shop
             </h3>
             <ul className="flex flex-col gap-3">
-              {footerLinks.shop.map((link) => (
-                <li key={link.href}>
+              <li>
+                <Link href="/shop" className="text-sm text-neutral-500 hover:text-white transition-colors">
+                  Todos os Produtos
+                </Link>
+              </li>
+              {categories.map((cat) => (
+                <li key={cat.id}>
                   <Link
-                    href={link.href}
+                    href={`/shop?category=${cat.slug}`}
                     className="text-sm text-neutral-500 hover:text-white transition-colors"
                   >
-                    {link.label}
+                    {cat.name}
                   </Link>
                 </li>
               ))}

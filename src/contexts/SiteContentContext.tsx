@@ -8,8 +8,15 @@ import {
   type ReactNode,
 } from "react";
 
+export interface DbCategory {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 interface SiteContentContextType {
   content: Record<string, string>;
+  categories: DbCategory[];
   isAdmin: boolean;
   isEditMode: boolean;
   toggleEditMode: () => void;
@@ -21,10 +28,12 @@ const SiteContentContext = createContext<SiteContentContextType | null>(null);
 export function SiteContentProvider({
   initial,
   initialIsAdmin,
+  initialCategories,
   children,
 }: {
   initial: Record<string, string>;
   initialIsAdmin: boolean;
+  initialCategories: DbCategory[];
   children: ReactNode;
 }) {
   const isAdmin = initialIsAdmin;
@@ -52,7 +61,7 @@ export function SiteContentProvider({
 
   return (
     <SiteContentContext.Provider
-      value={{ content, isAdmin, isEditMode, toggleEditMode, updateContent }}
+      value={{ content, categories: initialCategories, isAdmin, isEditMode, toggleEditMode, updateContent }}
     >
       {children}
     </SiteContentContext.Provider>

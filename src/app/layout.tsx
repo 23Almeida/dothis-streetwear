@@ -35,7 +35,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [siteContent, isAdmin] = await Promise.all([
+  const [siteContent, isAdmin, categoriesData] = await Promise.all([
     getSiteContent(),
     (async () => {
       try {
@@ -52,12 +52,24 @@ export default async function RootLayout({
         return false;
       }
     })(),
+    (async () => {
+      try {
+        const supabase = await createClient();
+        const { data } = await supabase
+          .from("categories")
+          .select("id, name, slug")
+          .order("name");
+        return (data ?? []) as { id: string; name: string; slug: string }[];
+      } catch {
+        return [];
+      }
+    })(),
   ]);
 
   return (
     <html lang="pt-BR">
       <body className={`${inter.variable} font-sans bg-black text-white antialiased`}>
-        <SiteContentProvider initial={siteContent} initialIsAdmin={isAdmin}>
+        <SiteContentProvider initial={siteContent} initialIsAdmin={isAdmin} initialCategories={categoriesData}>
           <Header />
           <main className="min-h-screen">{children}</main>
           <Footer />
