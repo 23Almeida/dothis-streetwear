@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
-import { Pencil, Check, X, Trash2, Plus, LayoutGrid } from "lucide-react";
+import { Pencil, Check, X, Trash2, Plus, LayoutGrid, Upload, Link2, Loader2 } from "lucide-react";
 import EditableText from "@/components/admin/EditableText";
 import { useSiteContent } from "@/contexts/SiteContentContext";
 import { normalizeImageUrl, slugify } from "@/lib/utils";
@@ -28,7 +28,6 @@ const SPAN_OPTIONS = [
   { label: "Alto (1×2)",    value: "col-span-1 row-span-2" },
 ];
 
-// Layout presets — define spans for each item in order
 const LAYOUT_PRESETS = [
   {
     label: "Destaque Esquerda",
@@ -57,6 +56,15 @@ const LAYOUT_PRESETS = [
   },
 ];
 
+async function uploadFile(file: File): Promise<string> {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch("/api/upload", { method: "POST", body: form });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Erro no upload");
+  return data.url as string;
+}
+
 export default function CategoryBanner() {
   const { content, isAdmin, isEditMode, updateContent } = useSiteContent();
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -67,11 +75,17 @@ export default function CategoryBanner() {
   const [editName, setEditName] = useState("");
   const [editImage, setEditImage] = useState("");
   const [editSpan, setEditSpan] = useState("");
+  const [editTab, setEditTab] = useState<"url" | "file">("url");
+  const [editUploading, setEditUploading] = useState(false);
+  const editFileRef = useRef<HTMLInputElement>(null);
 
   // add form state
   const [newName, setNewName] = useState("");
   const [newImage, setNewImage] = useState("");
   const [newSpan, setNewSpan] = useState("col-span-1");
+  const [addTab, setAddTab] = useState<"url" | "file">("url");
+  const [addUploading, setAddUploading] = useState(false);
+  const addFileRef = useRef<HTMLInputElement>(null);
 
   const categories: Category[] = (() => {
     try { return JSON.parse(content["categories.items"] ?? "[]"); }
@@ -86,6 +100,7 @@ export default function CategoryBanner() {
     setEditName(categories[i].name);
     setEditImage(categories[i].image);
     setEditSpan(categories[i].span);
+    setEditTab("url");
     setShowLayoutPicker(false);
     setShowAddForm(false);
   };
@@ -123,6 +138,41 @@ export default function CategoryBanner() {
     setNewName(""); setNewImage(""); setNewSpan("col-span-1");
     setShowAddForm(false);
   };
+
+  const handleEditFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEditUploading(true);
+    try {
+      const url = await uploadFile(file);
+      setEditImage(url);
+    } catch (err: any) {
+      alert(err.message ?? "Erro no upload");
+    } finally {
+      setEditUploading(false);
+      if (editFileRef.current) editFileRef.current.value = "";
+    }
+  };
+
+  const handleAddFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAddUploading(true);
+    try {
+      const url = await uploadFile(file);
+      setNewImage(url);
+    } catch (err: any) {
+      alert(err.message ?? "Erro no upload");
+    } finally {
+      setAddUploading(false);
+      if (addFileRef.current) addFileRef.current.value = "";
+    }
+  };
+
+  const tabCls = (active: boolean) =>
+    `flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase transition-colors ${
+      active ? "bg-white text-black" : "text-neutral-500 hover:text-white"
+    }`;
 
   return (
     <section className="py-20 px-4 sm:px-6 max-w-7xl mx-auto">
@@ -175,20 +225,47 @@ export default function CategoryBanner() {
       {isAdmin && isEditMode && showAddForm && (
         <div className="mb-6 p-4 bg-neutral-950 border border-white/10 flex flex-col gap-3">
           <p className="text-[10px] font-bold tracking-widest uppercase text-neutral-500">Novo Banner</p>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
             <input value={newName} onChange={(e) => setNewName(e.target.value)}
               placeholder="Nome (ex: Shorts)" onKeyDown={(e) => e.key === "Enter" && addNew()}
               className="bg-black border border-white/20 text-white text-sm px-3 py-2 outline-none focus:border-white" />
-            <input value={newImage} onChange={(e) => setNewImage(e.target.value)}
-              placeholder="URL da imagem ou Drive"
-              className="bg-black border border-white/20 text-white text-sm px-3 py-2 outline-none focus:border-white sm:col-span-2" />
+
+            <div className="sm:col-span-2 flex flex-col gap-1">
+              <div className="flex border border-white/10">
+                <button type="button" onClick={() => setAddTab("url")} className={tabCls(addTab === "url")}>
+                  <Link2 size={10} /> URL
+                </button>
+                <button type="button" onClick={() => setAddTab("file")} className={tabCls(addTab === "file")}>
+                  <Upload size={10} /> Upload
+                </button>
+              </div>
+              {addTab === "url" ? (
+                <input value={newImage} onChange={(e) => setNewImage(e.target.value)}
+                  placeholder="URL da imagem ou link do Google Drive"
+                  className="bg-black border border-white/20 text-white text-sm px-3 py-2 outline-none focus:border-white w-full" />
+              ) : (
+                <div className="flex items-center gap-2">
+                  <input ref={addFileRef} type="file" accept="image/*" onChange={handleAddFileChange}
+                    className="hidden" id="add-banner-file" />
+                  <label htmlFor="add-banner-file"
+                    className="flex items-center gap-1.5 cursor-pointer border border-white/20 hover:border-white/50 text-white text-[10px] font-bold tracking-widest uppercase px-3 py-2 transition-colors">
+                    {addUploading ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
+                    {addUploading ? "Enviando..." : "Escolher arquivo"}
+                  </label>
+                  {newImage && !addUploading && (
+                    <span className="text-[10px] text-green-400 truncate max-w-[160px]">✓ Imagem enviada</span>
+                  )}
+                </div>
+              )}
+            </div>
+
             <select value={newSpan} onChange={(e) => setNewSpan(e.target.value)}
               className="bg-black border border-white/20 text-white text-sm px-3 py-2 outline-none focus:border-white">
               {SPAN_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
           <div className="flex gap-2">
-            <button onClick={addNew} disabled={!newName.trim()}
+            <button onClick={addNew} disabled={!newName.trim() || addUploading}
               className="flex items-center gap-1.5 bg-white text-black text-[10px] font-bold tracking-widest uppercase px-4 py-2 hover:bg-neutral-200 disabled:opacity-40 transition-colors">
               <Check size={12} /> Adicionar
             </button>
@@ -206,21 +283,48 @@ export default function CategoryBanner() {
           <p className="text-[10px] font-bold tracking-widest uppercase text-neutral-500">
             Editando: <span className="text-white">{categories[editingIndex]?.name}</span>
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
             <input value={editName} onChange={(e) => setEditName(e.target.value)}
               placeholder="Nome" onKeyDown={(e) => e.key === "Enter" && saveEdit()}
               className="bg-black border border-white/20 text-white text-sm px-3 py-2 outline-none focus:border-white" />
-            <input value={editImage} onChange={(e) => setEditImage(e.target.value)}
-              placeholder="URL da imagem ou Drive"
-              className="bg-black border border-white/20 text-white text-sm px-3 py-2 outline-none focus:border-white sm:col-span-2" />
+
+            <div className="sm:col-span-2 flex flex-col gap-1">
+              <div className="flex border border-white/10">
+                <button type="button" onClick={() => setEditTab("url")} className={tabCls(editTab === "url")}>
+                  <Link2 size={10} /> URL
+                </button>
+                <button type="button" onClick={() => setEditTab("file")} className={tabCls(editTab === "file")}>
+                  <Upload size={10} /> Upload
+                </button>
+              </div>
+              {editTab === "url" ? (
+                <input value={editImage} onChange={(e) => setEditImage(e.target.value)}
+                  placeholder="URL da imagem ou link do Google Drive"
+                  className="bg-black border border-white/20 text-white text-sm px-3 py-2 outline-none focus:border-white w-full" />
+              ) : (
+                <div className="flex items-center gap-2">
+                  <input ref={editFileRef} type="file" accept="image/*" onChange={handleEditFileChange}
+                    className="hidden" id="edit-banner-file" />
+                  <label htmlFor="edit-banner-file"
+                    className="flex items-center gap-1.5 cursor-pointer border border-white/20 hover:border-white/50 text-white text-[10px] font-bold tracking-widest uppercase px-3 py-2 transition-colors">
+                    {editUploading ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
+                    {editUploading ? "Enviando..." : "Escolher arquivo"}
+                  </label>
+                  {editImage && !editUploading && editTab === "file" && (
+                    <span className="text-[10px] text-green-400 truncate max-w-[160px]">✓ Imagem enviada</span>
+                  )}
+                </div>
+              )}
+            </div>
+
             <select value={editSpan} onChange={(e) => setEditSpan(e.target.value)}
               className="bg-black border border-white/20 text-white text-sm px-3 py-2 outline-none focus:border-white">
               {SPAN_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
           <div className="flex gap-2">
-            <button onClick={saveEdit}
-              className="flex items-center gap-1.5 bg-white text-black text-[10px] font-bold tracking-widest uppercase px-4 py-2 hover:bg-neutral-200 transition-colors">
+            <button onClick={saveEdit} disabled={editUploading}
+              className="flex items-center gap-1.5 bg-white text-black text-[10px] font-bold tracking-widest uppercase px-4 py-2 hover:bg-neutral-200 disabled:opacity-40 transition-colors">
               <Check size={12} /> Salvar
             </button>
             <button onClick={() => { if (confirm("Excluir este banner?")) deleteItem(editingIndex); }}
