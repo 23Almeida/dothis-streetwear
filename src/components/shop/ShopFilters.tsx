@@ -30,20 +30,21 @@ export default function ShopFilters({ categories, totalCount }: ShopFiltersProps
 
   const updateParam = useCallback(
     (key: string, value: string | null) => {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(window.location.search);
       if (value === null) {
         params.delete(key);
       } else {
         params.set(key, value);
       }
       router.push(`/shop?${params.toString()}`);
+      router.refresh();
     },
-    [router, searchParams]
+    [router]
   );
 
   const toggleSize = useCallback(
     (size: string) => {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(window.location.search);
       const current = params.getAll("size");
       params.delete("size");
       if (current.includes(size)) {
@@ -52,8 +53,9 @@ export default function ShopFilters({ categories, totalCount }: ShopFiltersProps
         [...current, size].forEach((s) => params.append("size", s));
       }
       router.push(`/shop?${params.toString()}`);
+      router.refresh();
     },
-    [router, searchParams]
+    [router]
   );
 
   return (
@@ -157,7 +159,7 @@ export default function ShopFilters({ categories, totalCount }: ShopFiltersProps
       {/* Clear */}
       {(activeCategory || activeSizes.length > 0) && (
         <button
-          onClick={() => router.push("/shop")}
+          onClick={() => { router.push("/shop"); router.refresh(); }}
           className="text-xs text-neutral-500 hover:text-white transition-colors underline underline-offset-4 text-left"
         >
           Limpar filtros

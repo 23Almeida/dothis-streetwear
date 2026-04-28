@@ -123,12 +123,10 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
         <div className="flex gap-12">
           <aside className="w-56 flex-shrink-0 hidden lg:block">
-            <Suspense fallback={null}>
-              <ShopFilters
-                categories={categories}
-                totalCount={products.length}
-              />
-            </Suspense>
+            <ShopFilters
+              categories={categories}
+              totalCount={products.length}
+            />
           </aside>
 
           <div className="flex-1">

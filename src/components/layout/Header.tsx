@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ShoppingBag, User, Menu, X, Search, Pencil, Plus, Trash2, GripVertical } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,6 +33,7 @@ export default function Header() {
   const [draftLinks, setDraftLinks] = useState<NavLink[]>([]);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const { toggleCart, totalItems } = useCartStore();
   const { profile, signOut } = useAuth();
   const { isAdmin, isEditMode, content, updateContent } = useSiteContent();
@@ -105,6 +106,7 @@ export default function Header() {
                 <Link
                   key={link.href + link.label}
                   href={link.href}
+                  onClick={() => { if (link.href.startsWith("/shop")) router.refresh(); }}
                   className={cn(
                     "text-xs font-medium tracking-widest uppercase transition-colors",
                     pathname === link.href
