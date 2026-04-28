@@ -63,8 +63,12 @@ export default function Hero() {
   const [newNewTab,  setNewNewTab]  = useState(false);
 
   const buttons: HeroButton[] = (() => {
-    try { return JSON.parse(content["hero.buttons"] ?? "[]"); }
-    catch { return DEFAULT_BUTTONS; }
+    try {
+      const raw = content["hero.buttons"];
+      if (!raw) return DEFAULT_BUTTONS;
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_BUTTONS;
+    } catch { return DEFAULT_BUTTONS; }
   })();
 
   const layout = content["hero.buttons_layout"] ?? "row-center";
