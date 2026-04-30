@@ -67,8 +67,12 @@ export default function ProductForm({ categories, product }: ProductFormProps) {
 
   const handleChange = (field: string, value: any) => {
     setForm((prev) => {
-      const updated = { ...prev, [field]: value };
+      // CORREÇÃO AQUI: Se o campo for o slug, força a formatação para tirar espaços e acentos
+      const finalValue = field === "slug" ? slugify(value) : value;
 
+      const updated = { ...prev, [field]: finalValue };
+
+      // Mantém o auto-preenchimento do slug quando digita o nome de um produto NOVO
       if (field === "name" && !product) {
         updated.slug = slugify(value);
       }
