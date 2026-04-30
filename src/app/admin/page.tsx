@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/utils";
 import { Package, ShoppingBag, Users, TrendingUp } from "lucide-react";
 import HeroEditor from "@/components/admin/HeroEditor";
+import SocialLinksEditor from "@/components/admin/SocialLinksEditor"; // IMPORT CORRIGIDO AQUI
 import { getSiteContent } from "@/lib/site-content";
 
 export const dynamic = "force-dynamic";
@@ -91,9 +92,23 @@ export default async function AdminPage() {
           ))}
         </div>
 
-        {/* Hero Image */}
-        <div className="mb-12">
-          <HeroEditor currentImage={siteContent["hero.bg_image"]} />
+        {/* Editores da Home */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          
+          {/* Hero Image */}
+          <div>
+            <h2 className="text-xs font-bold tracking-widest uppercase text-white mb-4">Banner Principal</h2>
+            <HeroEditor currentImage={siteContent["hero.bg_image"]} />
+          </div>
+
+          {/* Redes Sociais */}
+          <div className="bg-neutral-950 border border-white/10 p-6 flex flex-col gap-4">
+            <h2 className="text-xs font-bold tracking-widest uppercase text-white mb-2">Redes Sociais (Rodapé)</h2>
+            <p className="text-xs text-neutral-500 mb-2">Deixe em branco para ocultar o ícone do rodapé.</p>
+            
+            {/* COMPONENTE NOVO AQUI */}
+            <SocialLinksEditor />
+          </div>
         </div>
 
         {/* Recent Orders */}

@@ -25,6 +25,11 @@ const footerLinks = {
 export default function Footer() {
   const { content, categories } = useSiteContent();
   const logoSrc = content["logo.src"] ?? "/Logo.png";
+  
+  // Buscando os links das redes sociais no seu sistema de conteúdo
+  const instagramUrl = content["social.instagram"];
+  const twitterUrl = content["social.twitter"];
+  const youtubeUrl = content["social.youtube"];
 
   return (
     <footer className="bg-neutral-950 border-t border-white/5 mt-auto">
@@ -48,27 +53,44 @@ export default function Footer() {
               className="mt-4 text-sm text-neutral-500 leading-relaxed"
             />
             <div className="flex gap-4 mt-6">
-              <a
-                href="#"
-                className="text-neutral-500 hover:text-white transition-colors"
-                aria-label="Instagram"
-              >
-                <Instagram size={20} />
-              </a>
-              <a
-                href="#"
-                className="text-neutral-500 hover:text-white transition-colors"
-                aria-label="Twitter"
-              >
-                <Twitter size={20} />
-              </a>
-              <a
-                href="#"
-                className="text-neutral-500 hover:text-white transition-colors"
-                aria-label="YouTube"
-              >
-                <Youtube size={20} />
-              </a>
+              
+              {/* Só renderiza o ícone se o admin preencheu a URL */}
+              {instagramUrl && (
+                <a
+                  href={instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-neutral-500 hover:text-white transition-colors"
+                  aria-label="Instagram"
+                >
+                  <Instagram size={20} />
+                </a>
+              )}
+              
+              {twitterUrl && (
+                <a
+                  href={twitterUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-neutral-500 hover:text-white transition-colors"
+                  aria-label="Twitter"
+                >
+                  <Twitter size={20} />
+                </a>
+              )}
+              
+              {youtubeUrl && (
+                <a
+                  href={youtubeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-neutral-500 hover:text-white transition-colors"
+                  aria-label="YouTube"
+                >
+                  <Youtube size={20} />
+                </a>
+              )}
+
             </div>
           </div>
 
@@ -83,7 +105,7 @@ export default function Footer() {
                   Todos os Produtos
                 </Link>
               </li>
-              {categories.map((cat) => (
+              {categories?.map((cat) => (
                 <li key={cat.id}>
                   <Link
                     href={`/shop?category=${cat.slug}`}
